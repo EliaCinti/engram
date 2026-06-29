@@ -21,6 +21,7 @@ from engram.store import MemoryStore
 from engram.search import SearchEngine
 from engram.graph import MemoryGraph
 from engram.entities import EntityGraph
+from engram.beliefs import BeliefReviewer
 
 # ── Init ──────────────────────────────────────────────────────
 
@@ -101,6 +102,7 @@ def recall(
         limit: Maximum number of results to return.
     """
     results = search_engine.search(query, project=project, limit=limit)
+    results = _annotate_beliefs(results)
     if not results:
         mode = "semantic" if search_engine.semantic_available else "keyword"
         return json.dumps({
@@ -290,6 +292,12 @@ def get_context(
     decisions = store.list_decisions(project=project, limit=5)
     context["recent_decisions"] = decisions
 
+    # Beliefs needing review (so a session opens knowing what's stale)
+    try:
+        context["needs_review"] = BeliefReviewer(store).scan(project=project, limit=5)
+    except Exception:  # noqa: BLE001 — review is best-effort, never block context
+        context["needs_review"] = []
+
     # Stats
     context["stats"] = store.stats()
 
@@ -396,6 +404,73 @@ def memory_history(memory_id: int) -> str:
         memory_id: The memory whose edit history to retrieve.
     """
     return json.dumps({"id": memory_id, "history": store.get_memory_history(memory_id)}, indent=2)
+
+
+# ── Belief revision (Phase 2) ────────────────────────────────
+
+
+def _annotate_beliefs(results: list[dict]) -> list[dict]:
+    """Attach belief status to memory results and hide retired ones. Additive."""
+    out = []
+    for r in results:
+        if r.get("type") == "memory":
+            b = store.get_belief(r["id"])
+            if b["status"] == "retired":
+                continue
+            if b["status"] != "active" or b["superseded_by"] or b["confidence"] < 0.7:
+                note = {"status": b["status"], "confidence": b["confidence"]}
+                if b["superseded_by"]:
+                    note["superseded_by"] = b["superseded_by"]
+                if b["review_reason"]:
+                    note["reason"] = b["review_reason"]
+                r["belief"] = note
+        out.append(r)
+    return out
+
+
+@mcp.tool()
+def review_beliefs(project: str | None = None) -> str:
+    """Scan the brain for memories that have likely gone stale and need review:
+    superseded by a newer memory, past a temporal deadline, conditional/provisional,
+    or already flagged. Read-only — it suggests, never deletes. Confirm with flag_stale.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+    """
+    flagged = BeliefReviewer(store).scan(project=project)
+    return json.dumps({"flagged": flagged, "count": len(flagged)}, indent=2)
+
+
+@mcp.tool()
+def set_belief(memory_id: int, confidence: float | None = None, status: str | None = None,
+               valid_until: str | None = None, review_reason: str | None = None,
+               superseded_by: int | None = None) -> str:
+    """Update a memory's belief envelope. None args keep the current value.
+
+    Args:
+        memory_id: The memory.
+        confidence: 0..1 how sure we are.
+        status: active | stale | retired.
+        valid_until: ISO date after which the claim expires.
+        review_reason: why the status/confidence changed.
+        superseded_by: id of the memory that replaced this one.
+    """
+    return json.dumps(store.set_belief(memory_id, confidence=confidence, status=status,
+                                       valid_until=valid_until, review_reason=review_reason,
+                                       superseded_by=superseded_by), indent=2)
+
+
+@mcp.tool()
+def flag_stale(memory_id: int, reason: str, superseded_by: int | None = None) -> str:
+    """Mark a memory as stale: kept and recoverable, but annotated in recall.
+
+    Args:
+        memory_id: The memory to flag.
+        reason: Why it's stale.
+        superseded_by: id of the memory that replaced it, if any.
+    """
+    return json.dumps(store.set_belief(memory_id, status="stale", review_reason=reason,
+                                       superseded_by=superseded_by), indent=2)
 
 
 # ── Entry point ───────────────────────────────────────────────

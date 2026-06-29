@@ -78,6 +78,16 @@ def main() -> int:
     ok("A and C linked via shared entity",
        any(e.kind == "entity" and {e.src, e.dst} == {1, 3} for e in g.edges))
 
+    # ── belief revision ──
+    from engram.beliefs import BeliefReviewer
+    ok("belief defaults (active, 0.7)",
+       s.get_belief(1)["status"] == "active" and s.get_belief(1)["confidence"] == 0.7)
+    s.set_belief(2, status="stale", review_reason="test")
+    ok("set_belief persists", s.get_belief(2)["status"] == "stale")
+    flagged = BeliefReviewer(s).scan()
+    sup = [f for f in flagged if f["memory_id"] == 1 and "superseded" in f["signals"]]
+    ok("scanner flags #1 superseded by #2", bool(sup) and sup[0]["superseded_by"] == 2)
+
     print("\n" + "=" * 56)
     print(f"CONSTELLATION TESTS: {PASS} passed, {FAIL} failed")
     print("=" * 56)
