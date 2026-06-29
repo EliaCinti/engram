@@ -295,22 +295,22 @@ class MemoryGraph:
     # ── Introspection ────────────────────────────────────────────────────────
 
     def related(self, memory_id: int, limit: int = 8) -> list[dict]:
-        out = []
+        """Strongest neighbours of a memory, deduped (one row per neighbour)."""
+        best: dict[int, dict] = {}
         for e in self.edges:
-            other = None
-            if e.src == memory_id:
-                other = e.dst
-            elif e.dst == memory_id:
-                other = e.src
-            if other is not None:
-                out.append({"id": other, "title": self.nodes[other].title,
-                            "kind": e.kind, "rel": e.rel, "weight": round(e.weight, 3)})
-        out.sort(key=lambda x: x["weight"], reverse=True)
-        return out[:limit]
+            other = e.dst if e.src == memory_id else (e.src if e.dst == memory_id else None)
+            if other is None:
+                continue
+            cur = best.get(other)
+            if cur is None or e.weight > cur["weight"]:
+                best[other] = {"id": other, "title": self.nodes[other].title,
+                               "kind": e.kind, "rel": e.rel, "weight": round(e.weight, 3)}
+        return sorted(best.values(), key=lambda x: x["weight"], reverse=True)[:limit]
 
     def stats(self) -> dict:
         cit = [e for e in self.edges if e.kind == "citation"]
         sem = [e for e in self.edges if e.kind == "semantic"]
+        ent = [e for e in self.edges if e.kind == "entity"]
         deg: dict[int, int] = {mid: 0 for mid in self.nodes}
         for e in self.edges:
             deg[e.src] += 1
@@ -325,6 +325,7 @@ class MemoryGraph:
             "citation_edges": len(cit),
             "citation_by_rel": rel_counts,
             "semantic_edges": len(sem),
+            "entity_edges": len(ent),
             "hubs": [{"id": mid, "degree": d, "title": self.nodes[mid].title} for mid, d in hubs],
             "orphans": orphans,
         }
