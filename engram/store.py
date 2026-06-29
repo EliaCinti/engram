@@ -95,6 +95,15 @@ class MemoryStore:
                     review_reason TEXT
                 );
 
+                CREATE TABLE IF NOT EXISTS insights (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    claim        TEXT NOT NULL,
+                    itype        TEXT NOT NULL,
+                    evidence_ids TEXT NOT NULL DEFAULT '[]',
+                    status       TEXT NOT NULL DEFAULT 'proposed',
+                    created_at   TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_memories_project ON memories(project);
                 CREATE INDEX IF NOT EXISTS idx_versions_memory ON memory_versions(memory_id);
                 CREATE INDEX IF NOT EXISTS idx_decisions_project ON decisions(project);
@@ -344,6 +353,46 @@ class MemoryStore:
             "valid_until": r["valid_until"], "superseded_by": r["superseded_by"],
             "review_reason": r["review_reason"],
         } for r in rows}
+
+    # ── Insights (reflection candidates) ──────────────────────
+
+    def store_insight(self, claim: str, itype: str, evidence_ids: list[int],
+                      status: str = "proposed") -> dict:
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO insights (claim, itype, evidence_ids, status, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (claim, itype, json.dumps(evidence_ids), status, now),
+            )
+            return {"id": cur.lastrowid, "claim": claim, "itype": itype,
+                    "evidence_ids": evidence_ids, "status": status}
+
+    def list_insights(self, status: str | None = None) -> list[dict]:
+        q = "SELECT * FROM insights"
+        params: list = []
+        if status:
+            q += " WHERE status = ?"
+            params.append(status)
+        q += " ORDER BY created_at DESC"
+        with self._conn() as conn:
+            rows = conn.execute(q, params).fetchall()
+        return [{"id": r["id"], "claim": r["claim"], "itype": r["itype"],
+                 "evidence_ids": json.loads(r["evidence_ids"]), "status": r["status"],
+                 "created_at": r["created_at"]} for r in rows]
+
+    def get_insight(self, insight_id: int) -> dict | None:
+        with self._conn() as conn:
+            r = conn.execute("SELECT * FROM insights WHERE id = ?", (insight_id,)).fetchone()
+        if not r:
+            return None
+        return {"id": r["id"], "claim": r["claim"], "itype": r["itype"],
+                "evidence_ids": json.loads(r["evidence_ids"]), "status": r["status"]}
+
+    def set_insight_status(self, insight_id: int, status: str) -> bool:
+        with self._conn() as conn:
+            cur = conn.execute("UPDATE insights SET status = ? WHERE id = ?", (status, insight_id))
+            return cur.rowcount > 0
 
     # ── Decisions ─────────────────────────────────────────────
 

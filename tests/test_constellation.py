@@ -88,6 +88,22 @@ def main() -> int:
     sup = [f for f in flagged if f["memory_id"] == 1 and "superseded" in f["signals"]]
     ok("scanner flags #1 superseded by #2", bool(sup) and sup[0]["superseded_by"] == 2)
 
+    # ── reflection: insights store + smoke ──
+    from engram.reflect import Reflector
+    ins = s.store_insight("claim X", "surprising_connection", [1, 3])
+    ok("insight stored as proposed", any(i["id"] == ins["id"] for i in s.list_insights("proposed")))
+    s.set_insight_status(ins["id"], "accepted")
+    ok("insight status updated", s.get_insight(ins["id"])["status"] == "accepted")
+    ok("reflect() returns a list", isinstance(Reflector(s).candidates(), list))
+
+    # ── procedural: recurring-incident clustering ──
+    from engram.procedural import ProceduralReviewer
+    s.store_memory("Duplicato lezione 38 creato per errore.", "Dup lez38", tags=["duplicato"], category="bugfix")
+    s.store_memory("Duplicato lezione 28 creato di nuovo.", "Dup lez28", tags=["duplicato"], category="bugfix")
+    rules = ProceduralReviewer(s).review()
+    dup = [r for r in rules if r["theme"] == "duplicato"]
+    ok("procedural finds recurring 'duplicato' cluster", bool(dup) and dup[0]["recurrence"] >= 2)
+
     print("\n" + "=" * 56)
     print(f"CONSTELLATION TESTS: {PASS} passed, {FAIL} failed")
     print("=" * 56)

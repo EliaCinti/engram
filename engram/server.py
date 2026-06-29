@@ -22,6 +22,8 @@ from engram.search import SearchEngine
 from engram.graph import MemoryGraph
 from engram.entities import EntityGraph
 from engram.beliefs import BeliefReviewer
+from engram.reflect import Reflector
+from engram.procedural import ProceduralReviewer
 
 # ── Init ──────────────────────────────────────────────────────
 
@@ -471,6 +473,77 @@ def flag_stale(memory_id: int, reason: str, superseded_by: int | None = None) ->
     """
     return json.dumps(store.set_belief(memory_id, status="stale", review_reason=reason,
                                        superseded_by=superseded_by), indent=2)
+
+
+# ── Reflection & procedural (Phase 3) ────────────────────────
+
+
+@mcp.tool()
+def reflect(project: str | None = None, limit: int = 15, store_them: bool = True) -> str:
+    """Think across memories: surface cross-project analogies and non-obvious
+    connections that recall cannot reach (reuses the Graphify graph — no extra LLM
+    cost). Candidates are saved as `proposed` insights (unless store_them=False)
+    for you to accept_insight / reject_insight.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+        limit: Max candidates.
+        store_them: Persist candidates as proposed insights.
+    """
+    cands = Reflector(store).candidates(project=project, limit=limit)
+    saved = [store.store_insight(c["claim"], c["itype"], c["evidence_ids"]) for c in cands] if store_them else []
+    return json.dumps({"candidates": cands, "stored": len(saved), "count": len(cands)}, indent=2)
+
+
+@mcp.tool()
+def list_insights(status: str | None = "proposed") -> str:
+    """List reflection insights, optionally by status (proposed | accepted | rejected)."""
+    items = store.list_insights(status=status)
+    return json.dumps({"insights": items, "count": len(items)}, indent=2)
+
+
+@mcp.tool()
+def accept_insight(insight_id: int, project: str = "global") -> str:
+    """Accept an insight: mark it accepted and promote it to a real memory linked
+    to its source memories.
+
+    Args:
+        insight_id: The insight to accept.
+        project: Project for the promoted memory.
+    """
+    ins = store.get_insight(insight_id)
+    if not ins:
+        return json.dumps({"error": f"Insight #{insight_id} not found."})
+    store.set_insight_status(insight_id, "accepted")
+    refs = " ".join(f"[[#{m}]]" for m in ins["evidence_ids"])
+    mem = store.store_memory(
+        content=f"{ins['claim']}\n\nDeriva da: {refs}",
+        title=f"Insight: {ins['claim'][:60]}",
+        project=project, tags=["insight", ins["itype"]], category="context")
+    return json.dumps({"status": "accepted", "insight_id": insight_id, "memory": mem}, indent=2)
+
+
+@mcp.tool()
+def reject_insight(insight_id: int) -> str:
+    """Reject an insight (kept on record, marked rejected).
+
+    Args:
+        insight_id: The insight to reject.
+    """
+    ok = store.set_insight_status(insight_id, "rejected")
+    return json.dumps({"status": "rejected" if ok else "not_found", "insight_id": insight_id})
+
+
+@mcp.tool()
+def review_procedures(project: str | None = None) -> str:
+    """Find recurring-incident clusters and propose always-on rules for review.
+    Read-only — never edits your operating instructions.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+    """
+    rules = ProceduralReviewer(store).review(project=project)
+    return json.dumps({"candidate_rules": rules, "count": len(rules)}, indent=2)
 
 
 # ── Entry point ───────────────────────────────────────────────
