@@ -19,6 +19,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mcp.server.fastmcp import FastMCP
 from engram.store import MemoryStore
 from engram.search import SearchEngine
+from engram.graph import MemoryGraph
+from engram.entities import EntityGraph
 
 # ── Init ──────────────────────────────────────────────────────
 
@@ -307,6 +309,93 @@ def brain_status() -> str:
         "stats": stats,
         "projects": store.list_projects(),
     }, indent=2)
+
+
+# ── Constellation: graph-aware recall (the differentiator) ───
+
+
+def _assoc_graph(project: str | None) -> MemoryGraph:
+    """Build the memory graph (citations + semantic kNN), enriched with the
+    cached Graphify entity edges if an entity graph has been built."""
+    g = MemoryGraph(store).build(project)
+    eg = EntityGraph(store)
+    if eg.graph_json.exists():
+        try:
+            g.load_entity_edges(str(eg.graph_json))
+        except Exception:  # noqa: BLE001 — entity enrichment is best-effort
+            pass
+    return g
+
+
+@mcp.tool()
+def recall_associative(query: str, project: str | None = None, limit: int = 5) -> str:
+    """Spreading-activation recall over the memory graph (HippoRAG-style).
+
+    Unlike `recall` (pure cosine top-k), this seeds the query's best matches and
+    propagates activation along citation, semantic, and shared-entity edges, so
+    strongly-connected memories surface even when not textually similar. Returns
+    the associative ranking AND the plain-cosine baseline for comparison.
+
+    Args:
+        query: Natural language query.
+        project: Scope to a project (None = whole brain).
+        limit: Number of results.
+    """
+    g = _assoc_graph(project)
+    return json.dumps(g.associative_recall(query, limit=limit), indent=2)
+
+
+@mcp.tool()
+def related_memories(memory_id: int, limit: int = 8) -> str:
+    """Show the memories most strongly linked to a given one (typed neighbours).
+
+    Args:
+        memory_id: The memory to expand from.
+        limit: Max neighbours to return.
+    """
+    g = _assoc_graph(None)
+    return json.dumps({"id": memory_id, "related": g.related(memory_id, limit)}, indent=2)
+
+
+@mcp.tool()
+def memory_graph(project: str | None = None, focus_id: int | None = None,
+                 include_entities: bool = True) -> str:
+    """Overview of the brain as a graph: hubs, orphans, components, a Mermaid
+    diagram of the citation backbone, and (if built) the Graphify entity graph
+    with communities, god-nodes and surprising connections.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+        focus_id: If set, the Mermaid diagram is centred on this memory.
+        include_entities: Include the Graphify entity-graph summary.
+    """
+    g = _assoc_graph(project)
+    out = g.stats()
+    out["mermaid"] = g.to_mermaid(focus=focus_id)
+    if include_entities:
+        out["entity_graph"] = EntityGraph(store).summary()
+    return json.dumps(out, indent=2)
+
+
+@mcp.tool()
+def rebuild_entity_graph(project: str | None = None) -> str:
+    """(Re)build the Graphify entity knowledge graph over the brain.
+
+    Runs extraction via the local `claude` CLI (free; uses your Claude plan).
+    Requires `graphifyy` installed (pip install graphifyy). Cached under
+    BRAIN_DIR/.constellation so other tools read it instantly.
+    """
+    return json.dumps(EntityGraph(store).rebuild(), indent=2)
+
+
+@mcp.tool()
+def memory_history(memory_id: int) -> str:
+    """Show prior versions of a memory (preserved on every update — non-destructive).
+
+    Args:
+        memory_id: The memory whose edit history to retrieve.
+    """
+    return json.dumps({"id": memory_id, "history": store.get_memory_history(memory_id)}, indent=2)
 
 
 # ── Entry point ───────────────────────────────────────────────

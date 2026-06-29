@@ -77,7 +77,15 @@ class MemoryStore:
                     created_at  TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS memory_versions (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    memory_id   INTEGER NOT NULL,
+                    content     TEXT NOT NULL,
+                    replaced_at TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_memories_project ON memories(project);
+                CREATE INDEX IF NOT EXISTS idx_versions_memory ON memory_versions(memory_id);
                 CREATE INDEX IF NOT EXISTS idx_decisions_project ON decisions(project);
             """)
 
@@ -219,6 +227,12 @@ class MemoryStore:
 
             if content is not None:
                 filepath = self.brain_dir / row["filepath"]
+                # Non-destructive: snapshot the previous version before overwriting.
+                if filepath.exists():
+                    conn.execute(
+                        "INSERT INTO memory_versions (memory_id, content, replaced_at) VALUES (?, ?, ?)",
+                        (memory_id, filepath.read_text(encoding="utf-8"), now),
+                    )
                 frontmatter = (
                     f"---\n"
                     f"title: {row['title']}\n"
@@ -242,6 +256,19 @@ class MemoryStore:
 
             conn.execute(f"UPDATE memories SET {', '.join(updates)} WHERE id = ?", params)
         return True
+
+    def get_memory_history(self, memory_id: int) -> list[dict]:
+        """Return prior versions of a memory, newest first (see update_memory)."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, replaced_at, content FROM memory_versions "
+                "WHERE memory_id = ? ORDER BY replaced_at DESC",
+                (memory_id,),
+            ).fetchall()
+        return [
+            {"version_id": r["id"], "replaced_at": r["replaced_at"], "content": r["content"]}
+            for r in rows
+        ]
 
     # ── Decisions ─────────────────────────────────────────────
 
