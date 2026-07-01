@@ -77,7 +77,35 @@ class MemoryStore:
                     created_at  TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS memory_versions (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    memory_id   INTEGER NOT NULL,
+                    content     TEXT NOT NULL,
+                    replaced_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS beliefs (
+                    memory_id     INTEGER PRIMARY KEY,
+                    confidence    REAL DEFAULT 0.7,
+                    status        TEXT DEFAULT 'active',
+                    valid_until   TEXT,
+                    sources       TEXT DEFAULT '[]',
+                    superseded_by INTEGER,
+                    last_reviewed TEXT,
+                    review_reason TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS insights (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    claim        TEXT NOT NULL,
+                    itype        TEXT NOT NULL,
+                    evidence_ids TEXT NOT NULL DEFAULT '[]',
+                    status       TEXT NOT NULL DEFAULT 'proposed',
+                    created_at   TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_memories_project ON memories(project);
+                CREATE INDEX IF NOT EXISTS idx_versions_memory ON memory_versions(memory_id);
                 CREATE INDEX IF NOT EXISTS idx_decisions_project ON decisions(project);
             """)
 
@@ -219,6 +247,12 @@ class MemoryStore:
 
             if content is not None:
                 filepath = self.brain_dir / row["filepath"]
+                # Non-destructive: snapshot the previous version before overwriting.
+                if filepath.exists():
+                    conn.execute(
+                        "INSERT INTO memory_versions (memory_id, content, replaced_at) VALUES (?, ?, ?)",
+                        (memory_id, filepath.read_text(encoding="utf-8"), now),
+                    )
                 frontmatter = (
                     f"---\n"
                     f"title: {row['title']}\n"
@@ -242,6 +276,123 @@ class MemoryStore:
 
             conn.execute(f"UPDATE memories SET {', '.join(updates)} WHERE id = ?", params)
         return True
+
+    def get_memory_history(self, memory_id: int) -> list[dict]:
+        """Return prior versions of a memory, newest first (see update_memory)."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, replaced_at, content FROM memory_versions "
+                "WHERE memory_id = ? ORDER BY replaced_at DESC",
+                (memory_id,),
+            ).fetchall()
+        return [
+            {"version_id": r["id"], "replaced_at": r["replaced_at"], "content": r["content"]}
+            for r in rows
+        ]
+
+    # ── Beliefs (epistemic envelope over a memory) ────────────
+
+    _BELIEF_DEFAULTS = {"confidence": 0.7, "status": "active", "valid_until": None,
+                        "sources": [], "superseded_by": None,
+                        "last_reviewed": None, "review_reason": None}
+
+    def get_belief(self, memory_id: int) -> dict:
+        """Belief envelope for a memory. Missing row → sensible defaults (active, 0.7)."""
+        with self._conn() as conn:
+            r = conn.execute("SELECT * FROM beliefs WHERE memory_id = ?", (memory_id,)).fetchone()
+        if not r:
+            return {"memory_id": memory_id, **self._BELIEF_DEFAULTS}
+        return {
+            "memory_id": memory_id, "confidence": r["confidence"], "status": r["status"],
+            "valid_until": r["valid_until"], "sources": json.loads(r["sources"] or "[]"),
+            "superseded_by": r["superseded_by"], "last_reviewed": r["last_reviewed"],
+            "review_reason": r["review_reason"],
+        }
+
+    def set_belief(self, memory_id: int, confidence: float | None = None,
+                   status: str | None = None, valid_until: str | None = None,
+                   sources: list | None = None, superseded_by: int | None = None,
+                   review_reason: str | None = None) -> dict:
+        """Upsert a belief; None args keep the current value."""
+        cur = self.get_belief(memory_id)
+        now = datetime.now(timezone.utc).isoformat()
+        m = {
+            "confidence": cur["confidence"] if confidence is None else confidence,
+            "status": cur["status"] if status is None else status,
+            "valid_until": cur["valid_until"] if valid_until is None else valid_until,
+            "sources": cur["sources"] if sources is None else sources,
+            "superseded_by": cur["superseded_by"] if superseded_by is None else superseded_by,
+            "review_reason": cur["review_reason"] if review_reason is None else review_reason,
+        }
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO beliefs (memory_id, confidence, status, valid_until, sources,
+                        superseded_by, last_reviewed, review_reason)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(memory_id) DO UPDATE SET
+                        confidence=excluded.confidence, status=excluded.status,
+                        valid_until=excluded.valid_until, sources=excluded.sources,
+                        superseded_by=excluded.superseded_by, last_reviewed=excluded.last_reviewed,
+                        review_reason=excluded.review_reason""",
+                (memory_id, m["confidence"], m["status"], m["valid_until"],
+                 json.dumps(m["sources"]), m["superseded_by"], now, m["review_reason"]),
+            )
+        return self.get_belief(memory_id)
+
+    def get_beliefs(self, project: str | None = None) -> dict:
+        """All stored belief rows (memories without a row use defaults elsewhere)."""
+        q = "SELECT b.* FROM beliefs b JOIN memories m ON m.id = b.memory_id"
+        params: list = []
+        if project:
+            q += " WHERE m.project = ? OR m.project = 'global'"
+            params.append(project)
+        with self._conn() as conn:
+            rows = conn.execute(q, params).fetchall()
+        return {r["memory_id"]: {
+            "confidence": r["confidence"], "status": r["status"],
+            "valid_until": r["valid_until"], "superseded_by": r["superseded_by"],
+            "review_reason": r["review_reason"],
+        } for r in rows}
+
+    # ── Insights (reflection candidates) ──────────────────────
+
+    def store_insight(self, claim: str, itype: str, evidence_ids: list[int],
+                      status: str = "proposed") -> dict:
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO insights (claim, itype, evidence_ids, status, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (claim, itype, json.dumps(evidence_ids), status, now),
+            )
+            return {"id": cur.lastrowid, "claim": claim, "itype": itype,
+                    "evidence_ids": evidence_ids, "status": status}
+
+    def list_insights(self, status: str | None = None) -> list[dict]:
+        q = "SELECT * FROM insights"
+        params: list = []
+        if status:
+            q += " WHERE status = ?"
+            params.append(status)
+        q += " ORDER BY created_at DESC"
+        with self._conn() as conn:
+            rows = conn.execute(q, params).fetchall()
+        return [{"id": r["id"], "claim": r["claim"], "itype": r["itype"],
+                 "evidence_ids": json.loads(r["evidence_ids"]), "status": r["status"],
+                 "created_at": r["created_at"]} for r in rows]
+
+    def get_insight(self, insight_id: int) -> dict | None:
+        with self._conn() as conn:
+            r = conn.execute("SELECT * FROM insights WHERE id = ?", (insight_id,)).fetchone()
+        if not r:
+            return None
+        return {"id": r["id"], "claim": r["claim"], "itype": r["itype"],
+                "evidence_ids": json.loads(r["evidence_ids"]), "status": r["status"]}
+
+    def set_insight_status(self, insight_id: int, status: str) -> bool:
+        with self._conn() as conn:
+            cur = conn.execute("UPDATE insights SET status = ? WHERE id = ?", (status, insight_id))
+            return cur.rowcount > 0
 
     # ── Decisions ─────────────────────────────────────────────
 

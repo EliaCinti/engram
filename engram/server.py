@@ -1,12 +1,15 @@
 """
-Brain MCP Server — persistent memory + semantic search for Claude Code / Desktop.
+Engram MCP Server — persistent memory + semantic search for Claude Code / Desktop.
 
-Tools:
-  Memory:     store_memory, recall, get_memory, list_memories, update_memory, delete_memory
-  Decisions:  store_decision, list_decisions
-  Projects:   register_project, list_projects, detect_project
-  Context:    get_context (auto-inject relevant memories for current task)
-  Status:     brain_status
+Tools (25), grouped by area:
+  Memory:       store_memory, get_memory, list_memories, update_memory, delete_memory, memory_history
+  Search/Ctx:   recall, get_context, brain_status
+  Decisions:    store_decision, list_decisions
+  Projects:     register_project, list_projects
+  Constellation: recall_associative, related_memories, memory_graph, rebuild_entity_graph
+  Beliefs:      review_beliefs, set_belief, flag_stale
+  Reflection:   reflect, list_insights, accept_insight, reject_insight
+  Procedural:   review_procedures
 """
 
 import json
@@ -19,6 +22,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mcp.server.fastmcp import FastMCP
 from engram.store import MemoryStore
 from engram.search import SearchEngine
+from engram.graph import MemoryGraph
+from engram.entities import EntityGraph
+from engram.beliefs import BeliefReviewer
+from engram.reflect import Reflector
+from engram.procedural import ProceduralReviewer
 
 # ── Init ──────────────────────────────────────────────────────
 
@@ -99,6 +107,7 @@ def recall(
         limit: Maximum number of results to return.
     """
     results = search_engine.search(query, project=project, limit=limit)
+    results = _annotate_beliefs(results)
     if not results:
         mode = "semantic" if search_engine.semantic_available else "keyword"
         return json.dumps({
@@ -288,6 +297,12 @@ def get_context(
     decisions = store.list_decisions(project=project, limit=5)
     context["recent_decisions"] = decisions
 
+    # Beliefs needing review (so a session opens knowing what's stale)
+    try:
+        context["needs_review"] = BeliefReviewer(store).scan(project=project, limit=5)
+    except Exception:  # noqa: BLE001 — review is best-effort, never block context
+        context["needs_review"] = []
+
     # Stats
     context["stats"] = store.stats()
 
@@ -307,6 +322,231 @@ def brain_status() -> str:
         "stats": stats,
         "projects": store.list_projects(),
     }, indent=2)
+
+
+# ── Constellation: graph-aware recall (the differentiator) ───
+
+
+def _assoc_graph(project: str | None) -> MemoryGraph:
+    """Build the memory graph (citations + semantic kNN), enriched with the
+    cached Graphify entity edges if an entity graph has been built."""
+    g = MemoryGraph(store).build(project)
+    eg = EntityGraph(store)
+    if eg.graph_json.exists():
+        try:
+            g.load_entity_edges(str(eg.graph_json))
+        except Exception:  # noqa: BLE001 — entity enrichment is best-effort
+            pass
+    return g
+
+
+@mcp.tool()
+def recall_associative(query: str, project: str | None = None, limit: int = 5) -> str:
+    """Spreading-activation recall over the memory graph (HippoRAG-style).
+
+    Unlike `recall` (pure cosine top-k), this seeds the query's best matches and
+    propagates activation along citation, semantic, and shared-entity edges, so
+    strongly-connected memories surface even when not textually similar. Returns
+    the associative ranking AND the plain-cosine baseline for comparison.
+
+    Args:
+        query: Natural language query.
+        project: Scope to a project (None = whole brain).
+        limit: Number of results.
+    """
+    g = _assoc_graph(project)
+    return json.dumps(g.associative_recall(query, limit=limit), indent=2)
+
+
+@mcp.tool()
+def related_memories(memory_id: int, limit: int = 8) -> str:
+    """Show the memories most strongly linked to a given one (typed neighbours).
+
+    Args:
+        memory_id: The memory to expand from.
+        limit: Max neighbours to return.
+    """
+    g = _assoc_graph(None)
+    return json.dumps({"id": memory_id, "related": g.related(memory_id, limit)}, indent=2)
+
+
+@mcp.tool()
+def memory_graph(project: str | None = None, focus_id: int | None = None,
+                 include_entities: bool = True) -> str:
+    """Overview of the brain as a graph: hubs, orphans, components, a Mermaid
+    diagram of the citation backbone, and (if built) the Graphify entity graph
+    with communities, god-nodes and surprising connections.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+        focus_id: If set, the Mermaid diagram is centred on this memory.
+        include_entities: Include the Graphify entity-graph summary.
+    """
+    g = _assoc_graph(project)
+    out = g.stats()
+    out["mermaid"] = g.to_mermaid(focus=focus_id)
+    if include_entities:
+        out["entity_graph"] = EntityGraph(store).summary()
+    return json.dumps(out, indent=2)
+
+
+@mcp.tool()
+def rebuild_entity_graph(project: str | None = None) -> str:
+    """(Re)build the Graphify entity knowledge graph over the brain.
+
+    Runs extraction via the local `claude` CLI (free; uses your Claude plan).
+    Requires `graphifyy` installed (pip install graphifyy). Cached under
+    BRAIN_DIR/.constellation so other tools read it instantly.
+    """
+    return json.dumps(EntityGraph(store).rebuild(), indent=2)
+
+
+@mcp.tool()
+def memory_history(memory_id: int) -> str:
+    """Show prior versions of a memory (preserved on every update — non-destructive).
+
+    Args:
+        memory_id: The memory whose edit history to retrieve.
+    """
+    return json.dumps({"id": memory_id, "history": store.get_memory_history(memory_id)}, indent=2)
+
+
+# ── Belief revision (Phase 2) ────────────────────────────────
+
+
+def _annotate_beliefs(results: list[dict]) -> list[dict]:
+    """Attach belief status to memory results and hide retired ones. Additive."""
+    out = []
+    for r in results:
+        if r.get("type") == "memory":
+            b = store.get_belief(r["id"])
+            if b["status"] == "retired":
+                continue
+            if b["status"] != "active" or b["superseded_by"] or b["confidence"] < 0.7:
+                note = {"status": b["status"], "confidence": b["confidence"]}
+                if b["superseded_by"]:
+                    note["superseded_by"] = b["superseded_by"]
+                if b["review_reason"]:
+                    note["reason"] = b["review_reason"]
+                r["belief"] = note
+        out.append(r)
+    return out
+
+
+@mcp.tool()
+def review_beliefs(project: str | None = None) -> str:
+    """Scan the brain for memories that have likely gone stale and need review:
+    superseded by a newer memory, past a temporal deadline, conditional/provisional,
+    or already flagged. Read-only — it suggests, never deletes. Confirm with flag_stale.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+    """
+    flagged = BeliefReviewer(store).scan(project=project)
+    return json.dumps({"flagged": flagged, "count": len(flagged)}, indent=2)
+
+
+@mcp.tool()
+def set_belief(memory_id: int, confidence: float | None = None, status: str | None = None,
+               valid_until: str | None = None, review_reason: str | None = None,
+               superseded_by: int | None = None) -> str:
+    """Update a memory's belief envelope. None args keep the current value.
+
+    Args:
+        memory_id: The memory.
+        confidence: 0..1 how sure we are.
+        status: active | stale | retired.
+        valid_until: ISO date after which the claim expires.
+        review_reason: why the status/confidence changed.
+        superseded_by: id of the memory that replaced this one.
+    """
+    return json.dumps(store.set_belief(memory_id, confidence=confidence, status=status,
+                                       valid_until=valid_until, review_reason=review_reason,
+                                       superseded_by=superseded_by), indent=2)
+
+
+@mcp.tool()
+def flag_stale(memory_id: int, reason: str, superseded_by: int | None = None) -> str:
+    """Mark a memory as stale: kept and recoverable, but annotated in recall.
+
+    Args:
+        memory_id: The memory to flag.
+        reason: Why it's stale.
+        superseded_by: id of the memory that replaced it, if any.
+    """
+    return json.dumps(store.set_belief(memory_id, status="stale", review_reason=reason,
+                                       superseded_by=superseded_by), indent=2)
+
+
+# ── Reflection & procedural (Phase 3) ────────────────────────
+
+
+@mcp.tool()
+def reflect(project: str | None = None, limit: int = 15, store_them: bool = True) -> str:
+    """Think across memories: surface cross-project analogies and non-obvious
+    connections that recall cannot reach (reuses the Graphify graph — no extra LLM
+    cost). Candidates are saved as `proposed` insights (unless store_them=False)
+    for you to accept_insight / reject_insight.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+        limit: Max candidates.
+        store_them: Persist candidates as proposed insights.
+    """
+    cands = Reflector(store).candidates(project=project, limit=limit)
+    saved = [store.store_insight(c["claim"], c["itype"], c["evidence_ids"]) for c in cands] if store_them else []
+    return json.dumps({"candidates": cands, "stored": len(saved), "count": len(cands)}, indent=2)
+
+
+@mcp.tool()
+def list_insights(status: str | None = "proposed") -> str:
+    """List reflection insights, optionally by status (proposed | accepted | rejected)."""
+    items = store.list_insights(status=status)
+    return json.dumps({"insights": items, "count": len(items)}, indent=2)
+
+
+@mcp.tool()
+def accept_insight(insight_id: int, project: str = "global") -> str:
+    """Accept an insight: mark it accepted and promote it to a real memory linked
+    to its source memories.
+
+    Args:
+        insight_id: The insight to accept.
+        project: Project for the promoted memory.
+    """
+    ins = store.get_insight(insight_id)
+    if not ins:
+        return json.dumps({"error": f"Insight #{insight_id} not found."})
+    store.set_insight_status(insight_id, "accepted")
+    refs = " ".join(f"[[#{m}]]" for m in ins["evidence_ids"])
+    mem = store.store_memory(
+        content=f"{ins['claim']}\n\nDeriva da: {refs}",
+        title=f"Insight: {ins['claim'][:60]}",
+        project=project, tags=["insight", ins["itype"]], category="context")
+    return json.dumps({"status": "accepted", "insight_id": insight_id, "memory": mem}, indent=2)
+
+
+@mcp.tool()
+def reject_insight(insight_id: int) -> str:
+    """Reject an insight (kept on record, marked rejected).
+
+    Args:
+        insight_id: The insight to reject.
+    """
+    ok = store.set_insight_status(insight_id, "rejected")
+    return json.dumps({"status": "rejected" if ok else "not_found", "insight_id": insight_id})
+
+
+@mcp.tool()
+def review_procedures(project: str | None = None) -> str:
+    """Find recurring-incident clusters and propose always-on rules for review.
+    Read-only — never edits your operating instructions.
+
+    Args:
+        project: Scope to a project (None = whole brain).
+    """
+    rules = ProceduralReviewer(store).review(project=project)
+    return json.dumps({"candidate_rules": rules, "count": len(rules)}, indent=2)
 
 
 # ── Entry point ───────────────────────────────────────────────
