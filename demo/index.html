@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engram — Persistent memory for AI workflows</title>
+<meta name="description" content="Your AI forgets everything between sessions. Engram is a local-first MCP memory server: persistent memory, semantic search, auto-context, a decision log, and a thinking knowledge graph.">
+<meta property="og:title" content="Engram — Persistent memory for AI workflows">
+<meta property="og:description" content="Your AI forgets everything between sessions. Engram fixes that.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238b7cf6' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2334d3ee'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── NAV ───────────────────────────────────────────────── -->
+<header class="nav">
+  <a class="brand" href="#top">
+    <span class="brand-mark">◉</span>
+    <span class="brand-name">Engram</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#start">Quick start</a>
+    <a class="nav-gh" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">
+      GitHub ↗
+    </a>
+  </nav>
+</header>
+
+<!-- ── HERO — graph builds as you scroll ─────────────────── -->
+<section class="hero" id="top">
+  <canvas id="rain" class="rain" aria-hidden="true"></canvas>
+  <div id="hero-track" class="hero-track">
+    <div class="hero-stage">
+      <div class="hero-grid">
+
+        <div class="hero-left">
+          <div class="pill">◉ engram · persistent memory · MCP</div>
+          <h1 id="hero-h1" data-text="Persistent memory for AI workflows">Persistent memory for AI workflows</h1>
+          <p class="lede">
+            Your AI forgets everything between sessions — re-reading files,
+            re-deriving architecture, re-debating solved problems.
+            <strong>Engram gives it a brain that stays.</strong>
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">View on GitHub ↗</a>
+            <a class="btn btn-ghost" href="#start">Quick start</a>
+          </div>
+
+          <!-- live recall terminal -->
+          <div class="terminal" aria-hidden="true">
+            <div class="term-head">
+              <span class="td r"></span><span class="td y"></span><span class="td g"></span>
+              <span class="tt">engram · recall.log</span>
+            </div>
+            <div class="term-body">
+              <div class="term-line"><span class="prompt">›</span> <span id="term-q"></span><span class="caret"></span></div>
+              <div id="term-results"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <svg id="hero-svg" viewBox="0 0 600 540" role="img" aria-label="Engram knowledge graph building"></svg>
+          <div class="build-meta">
+            <div class="bm-count"><span id="node-count">0</span><span class="bm-lbl">nodes indexed</span></div>
+            <div class="bm-bar"><span id="build-progress"></span></div>
+            <div class="bm-hint">scroll to build the graph ↓</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEM / SOLUTION ───────────────────────────────── -->
+<section class="section split" id="why">
+  <div class="split-col">
+    <div class="kicker red">The problem</div>
+    <h2>Every session starts from zero.</h2>
+    <p>
+      Open your editor on a project and the model knows nothing. It re-reads the
+      same files, re-discovers the same patterns, and you find yourself typing
+      the same reminders again and again:
+    </p>
+    <ul class="quote-list">
+      <li>“Remember, we use the observer pattern here…”</li>
+      <li>“The deploy script needs the <code>--feynotes</code> flag…”</li>
+      <li>“We already tried that — it doesn’t work because…”</li>
+    </ul>
+  </div>
+  <div class="split-col">
+    <div class="kicker green">The solution</div>
+    <h2>A brain that survives the session.</h2>
+    <p>
+      Engram gives your AI a <strong>persistent, local knowledge base</strong>.
+      It stores insights, decisions and patterns as you work, then retrieves the
+      relevant ones instantly at the start of the next session.
+    </p>
+    <p>
+      One call at session start — <code>get_context</code> — and everything your
+      AI needs is loaded. Zero wasted tokens re-discovering what it already knew.
+      Each session is smarter than the last.
+    </p>
+  </div>
+</section>
+
+<!-- ── FEATURES ──────────────────────────────────────────── -->
+<section class="section" id="features">
+  <div class="section-head">
+    <div class="kicker">What's inside</div>
+    <h2>Memory that doesn't just store — it <span class="grad">thinks</span>.</h2>
+    <p class="section-sub">
+      Most memory tools make knowledge searchable. Engram makes it active:
+      it connects, revises, reflects, and learns how you work.
+    </p>
+  </div>
+
+  <div class="feature-grid">
+    <article class="card">
+      <div class="card-icon">◍</div>
+      <h3>Persistent memory</h3>
+      <p>Knowledge stored as plain markdown files with SQLite metadata. Survives across
+         sessions, human-readable, editable by hand. Every edit is versioned — nothing is lost.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">⌕</div>
+      <h3>Semantic search</h3>
+      <p>Finds memories by meaning, not keywords. Powered by local embeddings via
+         <code>fastembed</code> — no API calls, no cloud, no cost. Runs entirely on your machine.</p>
+    </article>
+
+    <article class="card accent">
+      <div class="card-icon">⚡</div>
+      <h3>Auto-context</h3>
+      <p>The killer tool. <code>get_context</code> detects your project, gathers the relevant
+         memories and recent decisions, and hands your AI everything it needs in one call.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">⌗</div>
+      <h3>Decision log</h3>
+      <p>Not just <em>what</em> you know — <em>what you decided and why</em>. Each decision keeps its
+         rationale and the rejected alternatives, so no choice gets re-debated.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">✦</div>
+      <h3>Constellation graph</h3>
+      <p>An entity knowledge graph over your brain. <code>recall_associative</code> spreads
+         activation along citation, semantic and shared-entity edges — surfacing connected
+         memories even when the words don't match.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">⟳</div>
+      <h3>Belief revision</h3>
+      <p>Memories are beliefs with an epistemic envelope. Engram flags what's gone
+         <strong>stale</strong> or been <strong>superseded</strong>, so a session opens knowing what
+         it can no longer trust.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">✲</div>
+      <h3>Reflect &amp; insights</h3>
+      <p>Thinks <em>across</em> memories: surfaces cross-project analogies and non-obvious
+         connections recall can't reach, proposed as insights you accept or reject.</p>
+    </article>
+
+    <article class="card">
+      <div class="card-icon">⎈</div>
+      <h3>Procedural memory</h3>
+      <p>Notices recurring incidents and proposes always-on rules for review — your brain
+         learning not just facts, but how to <em>act</em>. Read-only: it suggests, never edits.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ──────────────────────────────────────── -->
+<section class="section" id="how">
+  <div class="section-head">
+    <div class="kicker">How it works</div>
+    <h2>Four steps. Then it compounds.</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <h3>Connect the MCP server</h3>
+      <p>One command wires Engram into Claude Code, Claude Desktop, Cursor — any MCP client.</p>
+      <pre class="code"><code>claude mcp add engram -- \
+  python /path/to/engram/server.py</code></pre>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <h3>Register your projects</h3>
+      <p>Map filesystem paths to a project name. Engram auto-detects which one you're in and
+         scopes memories accordingly.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <h3>Start with context</h3>
+      <p>Every session opens with <code>get_context</code> — the relevant brain is loaded before
+         the first file is touched.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <h3>Store as you go</h3>
+      <p>Bugs, decisions, configs, patterns — saved the moment they're figured out. The brain
+         grows; each session starts faster.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS STRIP ───────────────────────────────────────── -->
+<section class="strip">
+  <div class="strip-item"><span class="strip-num">25</span><span class="strip-lbl">MCP tools</span></div>
+  <div class="strip-item"><span class="strip-num">$0</span><span class="strip-lbl">API cost · runs local</span></div>
+  <div class="strip-item"><span class="strip-num">md + SQLite</span><span class="strip-lbl">human-readable store</span></div>
+  <div class="strip-item"><span class="strip-num">MIT</span><span class="strip-lbl">open source</span></div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────── -->
+<section class="section cta" id="start">
+  <div class="cta-box">
+    <h2>Give your AI a memory.</h2>
+    <p>Clone it, connect it, and never re-explain your codebase again.</p>
+    <pre class="code wide"><code># clone &amp; install (semantic search included)
+git clone https://github.com/EliaCinti/engram.git
+cd engram
+pip install -e ".[semantic]"
+
+# connect to Claude Code
+claude mcp add engram -- python "$(pwd)/engram/server.py"</code></pre>
+    <div class="cta-row center">
+      <a class="btn btn-primary" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">Star on GitHub ↗</a>
+      <a class="btn btn-ghost" href="https://github.com/EliaCinti/engram#quick-start" target="_blank" rel="noopener">Read the docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="brand">
+    <span class="brand-mark">◉</span>
+    <span class="brand-name">Engram</span>
+  </div>
+  <p class="footer-note">
+    Built by <a href="https://eliacinti.dev" target="_blank" rel="noopener">Elia Cinti — eliacinti.dev</a>
+  </p>
+  <p class="footer-fine">
+    The graph above is a self-contained interactive demo on a <em>fictional</em> project.
+    No real data.
+  </p>
+</footer>
+
+<!-- graphify-style hero engine — pure vanilla JS, no external libs -->
+<script src="app.js"></script>
+</body>
+</html>
