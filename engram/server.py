@@ -1,12 +1,15 @@
 """
-Brain MCP Server — persistent memory + semantic search for Claude Code / Desktop.
+Engram MCP Server — persistent memory + semantic search for Claude Code / Desktop.
 
-Tools:
-  Memory:     store_memory, recall, get_memory, list_memories, update_memory, delete_memory
-  Decisions:  store_decision, list_decisions
-  Projects:   register_project, list_projects, detect_project
-  Context:    get_context (auto-inject relevant memories for current task)
-  Status:     brain_status
+Tools (25), grouped by area:
+  Memory:       store_memory, get_memory, list_memories, update_memory, delete_memory, memory_history
+  Search/Ctx:   recall, get_context, brain_status
+  Decisions:    store_decision, list_decisions
+  Projects:     register_project, list_projects
+  Constellation: recall_associative, related_memories, memory_graph, rebuild_entity_graph
+  Beliefs:      review_beliefs, set_belief, flag_stale
+  Reflection:   reflect, list_insights, accept_insight, reject_insight
+  Procedural:   review_procedures
 """
 
 import json

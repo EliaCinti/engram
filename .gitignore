@@ -24,3 +24,11 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Personal data loaders — contain personal project/university data, do NOT commit
+bootstrap.py
+add_fisica1.py
+
+# Personal multi-device & backup infra (hardcoded machine-specific paths)
+backup/
+setup-air/
