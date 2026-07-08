@@ -1,8 +1,9 @@
 /* ── Engram landing — graphify-style hero ──────────────────────────
-   A designed hub-and-spoke knowledge graph (SVG) that BUILDS as you
-   scroll, a decoding headline, a flowing terminal recall ticker, and
-   perpetual particle flow along the edges. Engram violet/cyan palette.
-   Pure vanilla JS — no physics, no external libs.                     */
+   A designed hub-and-spoke knowledge graph (SVG) that SELF-ASSEMBLES
+   when it scrolls into view, reacts to the cursor (nodes repel with a
+   springy jelly), then lives (particle flow + halo breathing). Plus a
+   decoding headline, a terminal recall ticker, and faint glyph rain.
+   Engram violet/cyan palette. Pure vanilla JS — no external libs.     */
 
 (function () {
   "use strict";
@@ -75,63 +76,70 @@
   edges.push({ a: ring1[4], b: ring1[5], cross: true });
   edges.push({ a: ring1[1], b: ring1[4], cross: true });
 
-  // reveal order: hub, ring1, ring2, then cross-links sit with ring1
+  // reveal order: hub, then ring1, then ring2
   var nodeOrder = nodes.map(function (n) { return n.id; });
   nodeOrder.sort(function (a, b) {
     var rank = { hub: 0, r1: 1, r2: 2 };
     return rank[nodes[a].kind] - rank[nodes[b].kind];
   });
 
-  // ── 2 · render SVG skeleton (hidden, revealed progressively) ─────
-  var svg = document.getElementById("hero-svg");
-  var gEdges = mk("g"), gParticles = mk("g"), gNodes = mk("g");
-  svg.appendChild(gEdges); svg.appendChild(gParticles); svg.appendChild(gNodes);
-
+  // ── 2 · render SVG skeleton ─────────────────────────────────────
   function mk(t) { return document.createElementNS(SVGNS, t); }
 
+  var svg = document.getElementById("hero-svg");
+  if (!svg) return;
+  var gGlow = mk("g"), gEdges = mk("g"), gParticles = mk("g"), gNodes = mk("g");
+  gGlow.style.filter = "blur(9px)";          // soft neon bloom layer, beneath all
+  svg.appendChild(gGlow); svg.appendChild(gEdges); svg.appendChild(gParticles); svg.appendChild(gNodes);
+  svg.style.transformOrigin = "50% 48%";
+  svg.style.willChange = "transform";
+
+  // dynamic per-node state: offset (ox,oy) + velocity (vx,vy) for repulsion
+  nodes.forEach(function (n) { n.ox = 0; n.oy = 0; n.vx = 0; n.vy = 0; n.vis = 0; });
+
+  // edges — plain lines, opacity-revealed, endpoints follow displaced nodes
   edges.forEach(function (e) {
-    var na = nodes[e.a], nb = nodes[e.b];
     var ln = mk("line");
-    ln.setAttribute("x1", na.x); ln.setAttribute("y1", na.y);
-    ln.setAttribute("x2", nb.x); ln.setAttribute("y2", nb.y);
-    ln.setAttribute("stroke", e.cross ? "rgba(139,124,246,0.35)" : "rgba(52,211,238,0.4)");
+    ln.setAttribute("stroke", e.cross ? "rgba(139,124,246,0.55)" : "rgba(52,211,238,0.6)");
     ln.setAttribute("stroke-width", e.main ? 1.4 : 0.9);
-    var len = Math.hypot(nb.x - na.x, nb.y - na.y);
-    ln.setAttribute("stroke-dasharray", len);
-    ln.setAttribute("stroke-dashoffset", len);
-    ln.style.transition = "stroke-dashoffset .55s cubic-bezier(.2,.7,.2,1)";
-    e.el = ln; e.len = len; e.on = false;
+    ln.setAttribute("stroke-linecap", "round");
+    ln.setAttribute("opacity", "0");
+    e.el = ln; e.vis = 0;
     gEdges.appendChild(ln);
+    // one travelling particle per edge
+    var pt = mk("circle");
+    pt.setAttribute("r", e.main ? 2.2 : 1.6);
+    pt.setAttribute("fill", e.cross ? V : C);
+    pt.setAttribute("opacity", "0");
+    e.particle = pt; e.pPhase = Math.random();
+    gParticles.appendChild(pt);
   });
 
+  // nodes — bloom blob (blurred layer) + crisp group (halo, core, ring, label)
   nodes.forEach(function (n) {
+    var glow = mk("circle");
+    glow.setAttribute("r", n.r * 2.4); glow.setAttribute("fill", n.color);
+    glow.setAttribute("opacity", "0");
+    gGlow.appendChild(glow); n.glowEl = glow;
+
     var g = mk("g");
-    g.setAttribute("transform", "translate(" + n.x + " " + n.y + ")");
     g.setAttribute("class", "gnode");
     g.style.opacity = 0;
-    g.style.transform = "translate(" + n.x + "px," + n.y + "px) scale(.2)";
-    g.style.transformBox = "fill-box";
-    g.style.transition = "opacity .5s ease, transform .5s cubic-bezier(.2,1.5,.4,1)";
-
+    g.style.transformOrigin = "0 0";           // scale about the node centre
     // halo
     var halo = mk("circle");
-    halo.setAttribute("r", n.r + 6); halo.setAttribute("fill", n.color);
-    halo.setAttribute("opacity", "0.14"); halo.setAttribute("class", "halo");
+    halo.setAttribute("r", n.r + 6); halo.setAttribute("fill", n.color); halo.setAttribute("opacity", "0.14");
     g.appendChild(halo);
     // core
     var core = mk("circle");
     core.setAttribute("r", n.r); core.setAttribute("fill", n.color);
     g.appendChild(core);
-    // ring for hub/r1
+    // ring + label for hub/r1
     if (n.kind !== "r2") {
       var rg = mk("circle");
       rg.setAttribute("r", n.r + 3); rg.setAttribute("fill", "none");
-      rg.setAttribute("stroke", n.color); rg.setAttribute("stroke-width", "1");
-      rg.setAttribute("opacity", "0.5");
+      rg.setAttribute("stroke", n.color); rg.setAttribute("stroke-width", "1"); rg.setAttribute("opacity", "0.5");
       g.appendChild(rg);
-    }
-    // label
-    if (n.kind !== "r2") {
       var tx = mk("text");
       tx.textContent = n.label;
       tx.setAttribute("x", 0); tx.setAttribute("y", n.r + 15);
@@ -139,122 +147,155 @@
       tx.setAttribute("class", "glabel " + (n.kind === "hub" ? "hub" : ""));
       g.appendChild(tx);
     }
-    n.g = g; n.halo = halo; n.on = false;
+    n.g = g; n.halo = halo;
     gNodes.appendChild(g);
   });
 
-  // particles pool (one per edge)
-  edges.forEach(function (e) {
-    var p = mk("circle");
-    p.setAttribute("r", e.main ? 2.2 : 1.6);
-    p.setAttribute("fill", e.cross ? V : C);
-    p.setAttribute("opacity", "0");
-    e.particle = p; e.pPhase = Math.random();
-    gParticles.appendChild(p);
-  });
-
-  // ── 3 · reveal driven by scroll progress (sticky build) ─────────
-  function revealNode(n) {
-    if (n.on) return; n.on = true;
-    n.g.style.opacity = 1;
-    n.g.style.transform = "translate(" + n.x + "px," + n.y + "px) scale(1)";
-  }
-  function revealEdge(e) {
-    if (e.on) return; e.on = true;
-    e.el.setAttribute("stroke-dashoffset", "0");
-  }
-
+  // ── 3 · autonomous build timeline ───────────────────────────────
   var counterEl = document.getElementById("node-count");
   var progressEl = document.getElementById("build-progress");
-  var heroGrid = document.querySelector(".hero-grid");
 
-  function applyProgress(p) {
-    var e = p * p * (3 - 2 * p);            // smoothstep
-    var bp = Math.min(1, e / 0.72);         // graph fully built by ~72% of the scroll
-    var revealCount = Math.max(1, Math.round(bp * nodes.length));
-    var shown = {};
-    for (var i = 0; i < revealCount; i++) { var id = nodeOrder[i]; revealNode(nodes[id]); shown[id] = 1; }
-    edges.forEach(function (ed) { if (shown[ed.a] && shown[ed.b]) revealEdge(ed); });
-    if (counterEl) counterEl.textContent = revealCount;   // honest: the nodes actually drawn
-    if (progressEl) progressEl.style.width = (bp * 100).toFixed(1) + "%";
+  var LEAD = 480;      // ms before the first node appears
+  var STAGGER = 120;   // ms between successive nodes
+  var POP = 600;       // ms for one node / edge to ease in
+  nodeOrder.forEach(function (id, i) { nodes[id].revealAt = LEAD + i * STAGGER; });
+  edges.forEach(function (e) { e.revealAt = Math.max(nodes[e.a].revealAt, nodes[e.b].revealAt) + 80; });
+  var BUILD_MS = LEAD + nodes.length * STAGGER + POP;
 
-    // gentle exit — lift & fade the hero as the pin ends, so it blends
-    // into the next section instead of snapping to a black seam.
-    if (heroGrid) {
-      var exit = Math.max(0, (p - 0.82) / 0.18);
-      heroGrid.style.transform = exit > 0 ? "translateY(" + (-exit * 44).toFixed(1) + "px)" : "";
-      heroGrid.style.opacity = exit > 0 ? (1 - exit * 0.65).toFixed(3) : "";
-    }
+  var buildStart = null;
+  function startBuild() { if (buildStart === null) buildStart = performance.now(); }
+
+  function smooth(x) { return x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x); }
+  function outBack(x) { if (x >= 1) return 1; var c1 = 1.70158, c3 = c1 + 1, y = x - 1; return 1 + c3 * y * y * y + c1 * y * y; }
+  function nodeVis(n) {
+    if (reduce) return 1;
+    if (buildStart === null) return 0;
+    return Math.min(1, Math.max(0, (performance.now() - buildStart - n.revealAt) / POP));
   }
 
-  // effective progress = max(load-in auto build, scroll position)
-  var track = document.getElementById("hero-track");
-  var autoP = 0, autoStart = performance.now();
-  function scrollP() {
-    if (!track) return 0;
-    var r = track.getBoundingClientRect();
-    var span = r.height - window.innerHeight;
-    if (span <= 0) return 0;
-    return Math.min(1, Math.max(0, -r.top / span));
+  // ── 4 · cursor repulsion + subtle parallax lean ─────────────────
+  var cur = { x: 0, y: 0, on: false };
+  function toSvg(clientX, clientY) {
+    var r = svg.getBoundingClientRect();
+    return { x: (clientX - r.left) / r.width * W, y: (clientY - r.top) / r.height * H };
   }
+  if (!reduce) {
+    svg.addEventListener("pointermove", function (ev) {
+      var c = toSvg(ev.clientX, ev.clientY); cur.x = c.x; cur.y = c.y; cur.on = true;
+    }, { passive: true });
+    svg.addEventListener("pointerleave", function () { cur.on = false; });
+  }
+  var pxTgt = 0, pyTgt = 0, pxCur = 0, pyCur = 0;
+  if (!reduce) addEventListener("pointermove", function (ev) {
+    pxTgt = (ev.clientX / window.innerWidth - 0.5) * 2;
+    pyTgt = (ev.clientY / window.innerHeight - 0.5) * 2;
+  }, { passive: true });
 
-  // ── 4 · perpetual life: particles + halo pulse (rAF) ────────────
-  function tick() {
+  var REP_R = 90, REP_PUSH = 1.9, SPRING = 0.09, DAMP = 0.86;
+
+  function frame() {
     var t = now();
+    var built = reduce ? 1 : (buildStart === null ? 0 : smooth(Math.min(1, (performance.now() - buildStart) / BUILD_MS)));
+    var visCount = 0;
 
-    // auto build-in on first load so it's never empty (eases to ~0.4)
-    if (!reduce && autoP < 0.4) {
-      autoP = Math.min(0.4, (performance.now() - autoStart) / 1700 * 0.4);
-    }
-    var p = Math.max(reduce ? 1 : autoP, scrollP());
-    applyProgress(p);
+    // nodes: reveal + repulsion physics + draw
+    nodes.forEach(function (n) {
+      n.vis = nodeVis(n);
+      if (n.vis > 0.5) visCount++;
 
-    if (!reduce) {
-      // flow particles along visible edges
-      edges.forEach(function (ed) {
-        if (!ed.on) { ed.particle.setAttribute("opacity", "0"); return; }
-        var f = (t * (ed.main ? 0.28 : 0.2) + ed.pPhase) % 1;
-        var na = nodes[ed.a], nb = nodes[ed.b];
-        ed.particle.setAttribute("cx", na.x + (nb.x - na.x) * f);
-        ed.particle.setAttribute("cy", na.y + (nb.y - na.y) * f);
-        var fade = Math.sin(f * Math.PI);        // dim at the ends
-        ed.particle.setAttribute("opacity", (0.85 * fade).toFixed(2));
-      });
-      // halo breathing
-      nodes.forEach(function (n) {
-        if (!n.on) return;
-        var pl = 0.1 + 0.09 * (0.5 + 0.5 * Math.sin(t * 1.7 + n.id));
-        n.halo.setAttribute("opacity", pl.toFixed(3));
-      });
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-
-  // ── 5 · decoding headline ───────────────────────────────────────
-  function decode(el, delay) {
-    if (!el) return;
-    var GLYPH = "ΨΩΣ∇λπ∀∃ΔΦΘ01▓░▄▀█01";
-    var full = el.getAttribute("data-text") || el.textContent;
-    if (reduce) { el.textContent = full; return; }
-    var dur = 1100;
-    function run() {
-      var start = performance.now();
-      (function f(t) {
-        var p = Math.min((t - start) / dur, 1);
-        var out = "";
-        for (var i = 0; i < full.length; i++) {
-          var ch = full[i];
-          if (ch === " " || ch === "\n") { out += ch; continue; }
-          out += (i / full.length < p * 1.35) ? ch : GLYPH[(Math.random() * GLYPH.length) | 0];
+      if (reduce) { n.ox = 0; n.oy = 0; }
+      else {
+        var fx = -SPRING * n.ox, fy = -SPRING * n.oy;
+        if (cur.on && n.vis > 0.05) {
+          var dx = (n.x + n.ox) - cur.x, dy = (n.y + n.oy) - cur.y;
+          var d = Math.sqrt(dx * dx + dy * dy) || 0.001;
+          if (d < REP_R) { var force = (1 - d / REP_R) * REP_PUSH; fx += dx / d * force; fy += dy / d * force; }
         }
-        el.textContent = out;
-        if (p < 1) requestAnimationFrame(f); else el.textContent = full;
-      })(start);
-    }
-    setTimeout(run, delay || 0);
+        n.vx = (n.vx + fx) * DAMP; n.vy = (n.vy + fy) * DAMP;
+        n.ox += n.vx; n.oy += n.vy;
+      }
+
+      var X = n.x + n.ox, Y = n.y + n.oy;
+      var sc = 0.2 + 0.8 * outBack(n.vis);
+      n.g.style.opacity = Math.min(1, n.vis * 1.3);
+      n.g.style.transform = "translate(" + X.toFixed(2) + "px," + Y.toFixed(2) + "px) scale(" + sc.toFixed(3) + ")";
+      var breathe = 0.1 + 0.09 * (0.5 + 0.5 * Math.sin(t * 1.7 + n.id));
+      n.halo.setAttribute("opacity", (breathe * n.vis).toFixed(3));
+      var gb = n.kind === "hub" ? 0.6 : n.kind === "r1" ? 0.42 : 0.3;
+      n.glowEl.setAttribute("cx", X.toFixed(2)); n.glowEl.setAttribute("cy", Y.toFixed(2));
+      n.glowEl.setAttribute("opacity", (gb * n.vis).toFixed(3));
+    });
+
+    // edges: follow displaced endpoints, reveal by opacity, flow particles
+    edges.forEach(function (ed) {
+      var na = nodes[ed.a], nb = nodes[ed.b];
+      var ev = reduce ? 1 : (buildStart === null ? 0 : Math.min(1, Math.max(0, (performance.now() - buildStart - ed.revealAt) / POP)));
+      ed.vis = ev;
+      var ax = na.x + na.ox, ay = na.y + na.oy, bx = nb.x + nb.ox, by = nb.y + nb.oy;
+      ed.el.setAttribute("x1", ax.toFixed(2)); ed.el.setAttribute("y1", ay.toFixed(2));
+      ed.el.setAttribute("x2", bx.toFixed(2)); ed.el.setAttribute("y2", by.toFixed(2));
+      ed.el.setAttribute("opacity", smooth(ev).toFixed(3));
+      if (reduce || ev < 0.9) { ed.particle.setAttribute("opacity", "0"); return; }
+      var f = (t * (ed.main ? 0.28 : 0.2) + ed.pPhase) % 1;
+      ed.particle.setAttribute("cx", (ax + (bx - ax) * f).toFixed(2));
+      ed.particle.setAttribute("cy", (ay + (by - ay) * f).toFixed(2));
+      ed.particle.setAttribute("opacity", (0.85 * Math.sin(f * Math.PI)).toFixed(2));
+    });
+
+    if (counterEl) counterEl.textContent = visCount;
+    if (progressEl) progressEl.style.width = (built * 100).toFixed(1) + "%";
+
+    // subtle whole-graph lean toward the pointer + micro push-in while building
+    var s = reduce ? 1 : (0.965 + 0.035 * built);
+    if (!reduce) { pxCur += (pxTgt - pxCur) * 0.06; pyCur += (pyTgt - pyCur) * 0.06; }
+    svg.style.transform = "translate(" + (-pxCur * 9).toFixed(1) + "px," + (-pyCur * 7).toFixed(1) + "px) scale(" + s.toFixed(3) + ")";
+    gGlow.style.transform = "translate(" + (-pxCur * 5).toFixed(1) + "px," + (-pyCur * 4).toFixed(1) + "px)";
+
+    requestAnimationFrame(frame);
   }
-  decode(document.getElementById("hero-h1"), 250);
+  requestAnimationFrame(frame);
+
+  // kick off the build when the hero enters view (fallback timer too)
+  if (!reduce) {
+    var heroEl = document.getElementById("top");
+    if ("IntersectionObserver" in window && heroEl) {
+      var io = new IntersectionObserver(function (ents) {
+        ents.forEach(function (en) { if (en.isIntersecting) { startBuild(); io.disconnect(); } });
+      }, { threshold: 0.3 });
+      io.observe(heroEl);
+    }
+    setTimeout(startBuild, 900);
+  }
+
+  // ── Apple-style: light up the key word in each section title on view ──
+  (function () {
+    var hls = [].slice.call(document.querySelectorAll("h2 .hl"));
+    if (!hls.length) return;
+    if (reduce || !("IntersectionObserver" in window)) {
+      hls.forEach(function (el) { el.classList.add("lit"); });
+      return;
+    }
+    var hlIO = new IntersectionObserver(function (ents) {
+      ents.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("lit"); hlIO.unobserve(en.target); }
+      });
+    }, { threshold: 0.9, rootMargin: "0px 0px -10% 0px" });
+    hls.forEach(function (el) { hlIO.observe(el); });
+  })();
+
+  // ── 5 · hero headline — words blur-in, then the key word lights up ──
+  (function () {
+    var h1 = document.getElementById("hero-h1");
+    if (!h1) return;
+    var words = [].slice.call(h1.querySelectorAll(".w"));
+    var key = h1.querySelector(".hl");
+    if (reduce || !words.length) {
+      h1.classList.add("in"); if (key) key.classList.add("lit"); return;
+    }
+    words.forEach(function (w, i) { w.style.animationDelay = (140 + i * 95) + "ms"; });
+    requestAnimationFrame(function () { requestAnimationFrame(function () { h1.classList.add("in"); }); });
+    setTimeout(function () { if (key) key.classList.add("lit"); }, 140 + words.length * 95 + 640);
+  })();
 
   // ── 6 · terminal recall ticker ──────────────────────────────────
   (function () {
@@ -277,11 +318,16 @@
     ];
     var qi = 0;
     function type(q, done) {
-      var i = 0; qEl.textContent = "";
-      var iv = setInterval(function () {
-        qEl.textContent += q[i++];
-        if (i >= q.length) { clearInterval(iv); done(); }
-      }, 34);
+      qEl.textContent = ""; var i = 0;
+      (function step() {
+        if (i >= q.length) { setTimeout(done, 280); return; }   // beat before results
+        var ch = q[i++]; qEl.textContent += ch;
+        var d = 24 + Math.random() * 42;                        // humanised jitter
+        if (ch === " ") d = 12;                                 // faster across spaces
+        else if (ch === "(" || ch === ")" || ch === ",") d = 95;
+        else if (ch === '"' || ch === "?") d = 165;             // linger on quotes / ?
+        setTimeout(step, d);
+      })();
     }
     function results(rs, done) {
       rEl.innerHTML = "";

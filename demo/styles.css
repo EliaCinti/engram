@@ -41,7 +41,7 @@ body {
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip; /* clip (non hidden) per non rompere il position:sticky dell'hero */
 }
 
 a { color: inherit; text-decoration: none; }
@@ -50,6 +50,44 @@ a { color: inherit; text-decoration: none; }
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Apple-style key-word highlight — reveals to a gradient when it enters
+   view (solid heading colour → gradient), then a constant sheen sweeps
+   across + a soft glow on the edges. Added via .lit by the IntersectionObserver. */
+.hl {
+  background-image: linear-gradient(100deg,
+    var(--accent) 0%, var(--accent-2) 26%, #eaf6ff 50%, var(--accent-2) 74%, var(--accent) 100%);
+  background-size: 220% 100%;
+  background-position: 92% 0;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: currentColor;    /* starts as the heading colour */
+  transition: -webkit-text-fill-color .55s ease, text-shadow .6s ease;
+  will-change: background-position;
+}
+.hl.lit {
+  -webkit-text-fill-color: transparent;     /* reveal the gradient */
+  text-shadow: 0 0 22px rgba(139,124,246,0.38);
+  animation: hl-sheen 5.5s linear .55s infinite;
+}
+@keyframes hl-sheen {
+  0%   { background-position: 92% 0; }
+  100% { background-position: -128% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl { -webkit-text-fill-color: transparent; background-position: 50% 0; }
+  .hl.lit { animation: none; }
+}
+
+/* hero headline — words blur-in on load (elegant, no glyph scramble) */
+.reveal-words .w { display: inline-block; opacity: 0; transform: translateY(0.42em); filter: blur(12px); }
+.reveal-words.in .w { animation: word-in 0.72s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes word-in {
+  from { opacity: 0; transform: translateY(0.42em); filter: blur(12px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-words .w { opacity: 1; transform: none; filter: none; animation: none; }
 }
 
 code {
@@ -361,11 +399,11 @@ h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -1.2px
 .tip-hint { color: var(--text-faint); font-size: 10.5px; margin-top: 8px; }
 
 /* ══ HERO v2 — graphify-style scroll-build (overrides above) ═════ */
-.hero { position: relative; min-height: 0; overflow: hidden; background: var(--bg); }
+.hero { position: relative; min-height: 0; overflow: clip; background: var(--bg); } /* clip: preserva il sticky-pin dello stage mentre il grafo si costruisce */
 .rain { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; opacity: .10; pointer-events: none; }
-.hero-track { position: relative; z-index: 1; height: 185vh; }        /* scroll length of the build */
+.hero-track { position: relative; z-index: 1; }        /* build is a self-playing animation, not scroll-driven */
 .hero-stage {
-  position: sticky; top: 0; height: 100vh; display: flex; align-items: center;
+  position: relative; min-height: 100vh; display: flex; align-items: center;
   background:
     radial-gradient(900px 620px at 78% 22%, rgba(139,124,246,0.16), transparent 60%),
     radial-gradient(820px 700px at 10% 92%, rgba(52,211,238,0.10), transparent 60%);
@@ -402,7 +440,8 @@ h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -1.2px
 .term-body { padding: 13px 15px; min-height: 116px; }
 .term-line { font-size: 12.5px; color: var(--text); display: flex; align-items: center; gap: 7px; }
 .term-line .prompt { color: var(--accent-2); }
-.caret { display: inline-block; width: 7px; height: 14px; background: var(--accent-2); animation: blink 1.1s steps(1) infinite; }
+.caret { display: inline-block; width: 2px; height: 15px; margin-left: 2px; border-radius: 2px; vertical-align: text-bottom; background: var(--accent-2); box-shadow: 0 0 8px var(--accent-2); animation: caret-blink 1s ease-in-out infinite; }
+@keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.12; } }
 @keyframes blink { 50% { opacity: 0; } }
 #term-results { margin-top: 9px; display: flex; flex-direction: column; gap: 6px; }
 .tres { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: var(--text-dim); opacity: 0; transform: translateX(-6px); transition: opacity .3s, transform .3s; }
@@ -426,7 +465,6 @@ h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -1.2px
 @media (max-width: 920px) {
   .hero-grid { grid-template-columns: 1fr; gap: 22px; padding-top: 84px; }
   .hero-right { order: -1; }
-  .hero-track { height: 200vh; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-track { height: auto; }

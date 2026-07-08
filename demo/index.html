@@ -9,7 +9,7 @@
 <meta property="og:description" content="Your AI forgets everything between sessions. Engram fixes that.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238b7cf6' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2334d3ee'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
@@ -38,7 +38,7 @@
 
         <div class="hero-left">
           <div class="pill">◉ engram · persistent memory · MCP</div>
-          <h1 id="hero-h1" data-text="Persistent memory for AI workflows">Persistent memory for AI workflows</h1>
+          <h1 id="hero-h1" class="reveal-words"><span class="w">Persistent</span> <span class="w"><span class="hl">memory</span></span> <span class="w">for</span> <span class="w">AI</span> <span class="w">workflows</span></h1>
           <p class="lede">
             Your AI forgets everything between sessions — re-reading files,
             re-deriving architecture, re-debating solved problems.
@@ -67,7 +67,7 @@
           <div class="build-meta">
             <div class="bm-count"><span id="node-count">0</span><span class="bm-lbl">nodes indexed</span></div>
             <div class="bm-bar"><span id="build-progress"></span></div>
-            <div class="bm-hint">scroll to build the graph ↓</div>
+            <div class="bm-hint">live graph · hover to disturb ✦</div>
           </div>
         </div>
 
@@ -80,7 +80,7 @@
 <section class="section split" id="why">
   <div class="split-col">
     <div class="kicker red">The problem</div>
-    <h2>Every session starts from zero.</h2>
+    <h2>Every session starts from <span class="hl">zero</span>.</h2>
     <p>
       Open your editor on a project and the model knows nothing. It re-reads the
       same files, re-discovers the same patterns, and you find yourself typing
@@ -94,7 +94,7 @@
   </div>
   <div class="split-col">
     <div class="kicker green">The solution</div>
-    <h2>A brain that survives the session.</h2>
+    <h2>A brain that <span class="hl">survives</span> the session.</h2>
     <p>
       Engram gives your AI a <strong>persistent, local knowledge base</strong>.
       It stores insights, decisions and patterns as you work, then retrieves the
@@ -112,7 +112,7 @@
 <section class="section" id="features">
   <div class="section-head">
     <div class="kicker">What's inside</div>
-    <h2>Memory that doesn't just store — it <span class="grad">thinks</span>.</h2>
+    <h2>Memory that doesn't just store — it <span class="hl">thinks</span>.</h2>
     <p class="section-sub">
       Most memory tools make knowledge searchable. Engram makes it active:
       it connects, revises, reflects, and learns how you work.
@@ -184,15 +184,13 @@
 <section class="section" id="how">
   <div class="section-head">
     <div class="kicker">How it works</div>
-    <h2>Four steps. Then it compounds.</h2>
+    <h2>Four steps. Then it <span class="hl">compounds</span>.</h2>
   </div>
   <div class="steps">
     <div class="step">
       <div class="step-n">1</div>
       <h3>Connect the MCP server</h3>
       <p>One command wires Engram into Claude Code, Claude Desktop, Cursor — any MCP client.</p>
-      <pre class="code"><code>claude mcp add engram -- \
-  python /path/to/engram/server.py</code></pre>
     </div>
     <div class="step">
       <div class="step-n">2</div>
@@ -226,7 +224,7 @@
 <!-- ── CTA ───────────────────────────────────────────────── -->
 <section class="section cta" id="start">
   <div class="cta-box">
-    <h2>Give your AI a memory.</h2>
+    <h2>Give your AI a <span class="hl">memory</span>.</h2>
     <p>Clone it, connect it, and never re-explain your codebase again.</p>
     <pre class="code wide"><code># clone &amp; install (semantic search included)
 git clone https://github.com/EliaCinti/engram.git
@@ -258,6 +256,6 @@ claude mcp add engram -- python "$(pwd)/engram/server.py"</code></pre>
 </footer>
 
 <!-- graphify-style hero engine — pure vanilla JS, no external libs -->
-<script src="app.js"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
