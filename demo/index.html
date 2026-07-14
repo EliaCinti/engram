@@ -236,14 +236,14 @@
 <section class="section cta" id="start">
   <div class="cta-box">
     <h2>Give your AI a <span class="hl">memory</span>.</h2>
-    <p>Clone it, connect it, and never re-explain your codebase again.</p>
-    <pre class="code wide"><code># clone &amp; install (semantic search included)
-git clone https://github.com/EliaCinti/wadachi.git
-cd wadachi
-pip install -e ".[semantic]"
+    <p>Three commands, and you never re-explain your codebase again.</p>
+    <pre class="code wide"><code># install (semantic search included, runs locally)
+pipx install "wadachi[semantic]"
 
-# connect to Claude Code
-claude mcp add wadachi -- python "$(pwd)/wadachi/server.py"</code></pre>
+# guided setup: brain dir, database, Claude Code registration
+wadachi init
+
+# restart Claude Code — your AI now remembers</code></pre>
     <div class="cta-row center">
       <a class="btn btn-primary" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">Star on GitHub ↗</a>
       <a class="btn btn-ghost" href="https://github.com/EliaCinti/wadachi#quick-start" target="_blank" rel="noopener">Read the docs</a>
