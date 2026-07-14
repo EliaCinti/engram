@@ -57,6 +57,30 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (norm_a * norm_b))
 
 
+# ── Decay (Fase 4.16) ─────────────────────────────────────────
+
+def decay_penalty(mem: dict, now: "datetime | None" = None) -> float:
+    """Penalità 0..0.12 per memorie mai (o da tanto non) richiamate.
+
+    Deliberatamente GENTILE e trasparente: -2% di score per ogni mese oltre il
+    primo dall'ultimo tocco (creazione o accesso), cap al 12%. Non seppellisce
+    mai una memoria: riordina a parità di rilevanza. Ogni accesso la ringiovanisce.
+    """
+    from datetime import datetime, timezone
+    ref = mem.get("last_accessed") or mem.get("created_at")
+    if not ref:
+        return 0.0
+    try:
+        then = datetime.fromisoformat(ref)
+        if then.tzinfo is None:
+            then = then.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return 0.0
+    now = now or datetime.now(timezone.utc)
+    months_idle = max(0.0, ((now - then).days - 30) / 30)
+    return min(0.12, 0.02 * months_idle)
+
+
 # ── Keyword fallback ──────────────────────────────────────────
 
 def _tokenize(text: str) -> set[str]:
@@ -148,15 +172,19 @@ class SearchEngine:
 
             score = cosine_similarity(query_emb, mem_emb)
             if score >= min_score:
-                results.append({
+                penalty = decay_penalty(mem)
+                entry = {
                     "type": "memory",
                     "id": mem["id"],
                     "title": mem["title"],
                     "category": mem["category"],
                     "tags": mem["tags"],
                     "preview": mem["content"][:300] + ("..." if len(mem["content"]) > 300 else ""),
-                    "score": round(score, 3),
-                })
+                    "score": round(score * (1 - penalty), 3),
+                }
+                if penalty > 0:
+                    entry["decay"] = round(penalty, 3)   # trasparente: si vede perché è scesa
+                results.append(entry)
         return results
 
     def _semantic_search_decisions(
@@ -232,15 +260,19 @@ class SearchEngine:
         for mem in memories:
             score = keyword_score(query, mem["title"], mem["content"], mem["tags"])
             if score >= min_score:
-                results.append({
+                penalty = decay_penalty(mem)
+                entry = {
                     "type": "memory",
                     "id": mem["id"],
                     "title": mem["title"],
                     "category": mem["category"],
                     "tags": mem["tags"],
                     "preview": mem["content"][:300] + ("..." if len(mem["content"]) > 300 else ""),
-                    "score": round(score, 3),
-                })
+                    "score": round(score * (1 - penalty), 3),
+                }
+                if penalty > 0:
+                    entry["decay"] = round(penalty, 3)
+                results.append(entry)
         return results
 
     def _keyword_search_decisions(

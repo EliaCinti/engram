@@ -27,7 +27,7 @@ def test_recall_empty_brain(srv):
 
 
 def test_get_context_no_project(srv):
-    out = j(srv.get_context(cwd="/percorso/non/registrato"))
+    out = j(srv.get_context(cwd="/percorso/non/registrato", format="json"))
     assert "project" in out and "stats" in out
     assert "needs_review" in out
 
@@ -120,7 +120,7 @@ def test_project_tools_and_context(srv, tmp_path):
     j(srv.register_project("toolproj", "progetto di test", [str(pdir)]))
     assert any(p["name"] == "toolproj" for p in j(srv.list_projects())["projects"])
 
-    ctx = j(srv.get_context(cwd=str(pdir), task_description="sqlite"))
+    ctx = j(srv.get_context(cwd=str(pdir), task_description="sqlite", format="json"))
     assert ctx["project"]["name"] == "toolproj"
 
 
@@ -181,5 +181,5 @@ def test_malformed_inputs_do_not_crash(srv):
     assert isinstance(j(srv.recall("")), dict)
     # limit zero
     assert isinstance(j(srv.recall("x", limit=0)), dict)
-    # get_context senza cwd
-    assert "stats" in j(srv.get_context())
+    # get_context senza cwd: formato denso, deve contenere le stats
+    assert "stats:" in srv.get_context()

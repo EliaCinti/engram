@@ -9,11 +9,16 @@ import pytest
 from wadachi.migrations import MigrationError, run_migrations, _discover
 from wadachi.store import MemoryStore
 
+# la catena completa delle migrazioni disponibili: i test restano validi
+# anche quando se ne aggiungono di nuove
+ALL = [v for v, _, _ in _discover()]
+LATEST = ALL[-1]
+
 
 def test_fresh_db_gets_baseline(tmp_path):
     db = tmp_path / "brain.db"
     applied = run_migrations(db)
-    assert applied == [1]
+    assert applied == ALL
     conn = sqlite3.connect(db)
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"memories", "decisions", "projects", "memory_versions",
@@ -23,12 +28,12 @@ def test_fresh_db_gets_baseline(tmp_path):
 
 def test_second_run_is_noop(tmp_path):
     db = tmp_path / "brain.db"
-    assert run_migrations(db) == [1]
+    assert run_migrations(db) == ALL
     assert run_migrations(db) == []          # niente da applicare
     conn = sqlite3.connect(db)
     count = conn.execute("SELECT COUNT(*) FROM schema_version").fetchone()[0]
     conn.close()
-    assert count == 1                        # nessuna doppia applicazione
+    assert count == len(ALL)                 # nessuna doppia applicazione
 
 
 def test_fresh_db_has_no_backup(tmp_path):
@@ -54,11 +59,11 @@ def test_legacy_db_adopted_with_backup(tmp_path):
     conn.close()
 
     applied = run_migrations(db)
-    assert applied == [1]
+    assert applied == ALL
 
     conn = sqlite3.connect(db)
     assert conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0] == 1
-    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == 1
+    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == LATEST
     conn.close()
 
     backups = list((tmp_path / "backups").glob("brain.db.bak.*"))
@@ -79,11 +84,12 @@ def test_corrupted_db_raises_clear_error(tmp_path):
 def test_failing_migration_rolls_back(tmp_path, monkeypatch):
     """Una migrazione che fallisce non lascia il DB a metà e nomina il backup."""
     db = tmp_path / "brain.db"
-    assert run_migrations(db) == [1]
+    assert run_migrations(db) == ALL
 
-    boom = tmp_path / "0002_boom.py"
-    boom.write_text(textwrap.dedent("""
-        VERSION = 2
+    nxt = LATEST + 1
+    boom = tmp_path / f"{nxt:04d}_boom.py"
+    boom.write_text(textwrap.dedent(f"""
+        VERSION = {nxt}
         DESCRIPTION = "esplode a metà"
         def up(conn):
             conn.execute("CREATE TABLE half_done (id INTEGER)")
@@ -91,13 +97,13 @@ def test_failing_migration_rolls_back(tmp_path, monkeypatch):
     """))
     import wadachi.migrations as mig
     real = _discover()
-    monkeypatch.setattr(mig, "_discover", lambda: real + [(2, "0002_boom", boom)])
+    monkeypatch.setattr(mig, "_discover", lambda: real + [(nxt, boom.stem, boom)])
 
-    with pytest.raises(MigrationError, match="0002_boom.*fallita"):
+    with pytest.raises(MigrationError, match="boom.*fallita"):
         mig.run_migrations(db)
 
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == 1
+    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == LATEST
     tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert "half_done" not in tables         # transazione rollbackata
     conn.close()
@@ -105,11 +111,12 @@ def test_failing_migration_rolls_back(tmp_path, monkeypatch):
 
 def test_version_prefix_mismatch_rejected(tmp_path, monkeypatch):
     db = tmp_path / "brain.db"
-    bad = tmp_path / "0002_bad.py"
-    bad.write_text("VERSION = 99\ndef up(conn): pass\n")
+    nxt = LATEST + 1
+    bad = tmp_path / f"{nxt:04d}_bad.py"
+    bad.write_text("VERSION = 9999\ndef up(conn): pass\n")
     import wadachi.migrations as mig
     real = _discover()
-    monkeypatch.setattr(mig, "_discover", lambda: real + [(2, "0002_bad", bad)])
+    monkeypatch.setattr(mig, "_discover", lambda: real + [(nxt, bad.stem, bad)])
     with pytest.raises(MigrationError, match="non corrisponde"):
         mig.run_migrations(db)
 
@@ -118,5 +125,5 @@ def test_store_init_runs_migrations(tmp_path):
     """MemoryStore._init_db passa dal runner: il DB nasce già versionato."""
     s = MemoryStore(str(tmp_path / "b"))
     conn = sqlite3.connect(s.db_path)
-    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == 1
+    assert conn.execute("SELECT MAX(version) FROM schema_version").fetchone()[0] == LATEST
     conn.close()

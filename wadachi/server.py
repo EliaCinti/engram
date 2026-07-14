@@ -1,15 +1,16 @@
 """
 Wadachi MCP Server — persistent memory + semantic search for Claude Code / Desktop.
 
-Tools (25), grouped by area:
+Tools (28), grouped by area:
   Memory:       store_memory, get_memory, list_memories, update_memory, delete_memory, memory_history
-  Search/Ctx:   recall, get_context, brain_status
+  Search/Ctx:   recall, get_context, expand_memory, brain_status
   Decisions:    store_decision, list_decisions
   Projects:     register_project, list_projects
   Constellation: recall_associative, related_memories, memory_graph, rebuild_entity_graph
   Beliefs:      review_beliefs, set_belief, flag_stale
   Reflection:   reflect, list_insights, accept_insight, reject_insight
   Procedural:   review_procedures
+  Consolidation: consolidate, merge_memories
 """
 
 import functools
@@ -287,24 +288,89 @@ def list_projects() -> str:
 # ── Context Tool (the killer feature) ────────────────────────
 
 
+def _est_tokens(text: str) -> int:
+    """Stima grossolana ma stabile: ~4 caratteri per token."""
+    return len(text) // 4
+
+
+def _render_context_dense(context: dict, max_tokens: int) -> str:
+    """Formato a livelli (Fase 4.12/4.14): righe compatte con puntatori #id.
+
+    Se il budget non basta, si tronca PER RILEVANZA (le memorie sono già
+    ordinate per score): prima si accorciano needs_review e decisioni,
+    poi le memorie dalla coda. Header, stats e footer restano sempre.
+    """
+    proj = context["project"].get("name", "unknown")
+    head = [f"# wadachi · project: {proj} · search: {context['search_mode'].split()[0]}"]
+    if "note" in context["project"]:
+        head.append(f"({context['project']['note']})")
+
+    mem_lines = []
+    for m in context.get("relevant_memories", []):
+        mark = ""
+        if m.get("belief"):
+            mark = f" ⚠{m['belief']['status']}"
+        score = f" ·{m['score']}·" if "score" in m else " ·"
+        kind = "D" if m.get("type") == "decision" else "#"
+        label = m.get("title") or m.get("decision", "")
+        mem_lines.append(f"{kind}{m['id']} {m.get('category', 'decision')}{score} {label[:95]}{mark}")
+    for m in context.get("recent_memories", []):
+        mem_lines.append(f"#{m['id']} {m['category']} · {m['title'][:95]}")
+
+    dec_lines = [f"D{d['id']} {d['created_at'][:10]} · {d['decision'][:100]}"
+                 for d in context.get("recent_decisions", [])]
+    rev_lines = [f"#{f['memory_id']} [{','.join(f.get('signals', []))}] {f.get('reason', '')[:75]}"
+                 for f in context.get("needs_review", [])]
+
+    s = context["stats"]
+    footer = [f"stats: {s['memories']} mem · {s['decisions']} dec · {s['projects']} prog",
+              "→ contenuto completo: expand_memory(ids=[…])"]
+
+    def assemble(n_mem, n_dec, n_rev):
+        parts = list(head)
+        if mem_lines[:n_mem]:
+            parts += ["## memorie (rilevanza ↓)"] + mem_lines[:n_mem]
+        if dec_lines[:n_dec]:
+            parts += ["## decisioni recenti"] + dec_lines[:n_dec]
+        if rev_lines[:n_rev]:
+            parts += ["## da rivedere"] + rev_lines[:n_rev]
+        return "\n".join(parts + footer)
+
+    n_mem, n_dec, n_rev = len(mem_lines), len(dec_lines), len(rev_lines)
+    out = assemble(n_mem, n_dec, n_rev)
+    while _est_tokens(out) > max_tokens:
+        if n_rev > 1:
+            n_rev -= 1
+        elif n_dec > 2:
+            n_dec -= 1
+        elif n_mem > 1:
+            n_mem -= 1
+        else:
+            break                      # sotto il minimo utile non si scende
+        out = assemble(n_mem, n_dec, n_rev)
+    return out
+
+
 @tool()
 def get_context(
     cwd: str = "",
     task_description: str = "",
     limit: int = 8,
+    max_tokens: int = 600,
+    format: str = "dense",
 ) -> str:
     """Auto-inject relevant context at the start of a session. Call this FIRST.
 
-    Detects the current project from cwd, then returns:
-    - Project info
-    - Recent relevant memories
-    - Recent decisions
-    - Brain stats
+    Detects the current project from cwd, then returns a COMPACT overview
+    (~300-600 tokens): memory/decision pointers with ids, what needs review,
+    stats. Drill into anything with expand_memory(ids=[...]).
 
     Args:
         cwd: Current working directory (for project auto-detection).
         task_description: Brief description of what you're about to do (improves relevance).
         limit: Max memories to include.
+        max_tokens: Token budget for the dense format — truncated by relevance, not by age.
+        format: "dense" (default, compact markdown) or "json" (full previews, verbose).
     """
     # Detect project
     project = None
@@ -323,7 +389,7 @@ def get_context(
     # Get relevant memories
     if task_description:
         search_results = search_engine.search(task_description, project=project, limit=limit)
-        context["relevant_memories"] = search_results
+        context["relevant_memories"] = _annotate_beliefs(search_results)
     else:
         # Just get recent memories for this project
         memories = store.list_memories(project=project)
@@ -342,7 +408,23 @@ def get_context(
     # Stats
     context["stats"] = store.stats()
 
-    return json.dumps(context, indent=2)
+    if format == "json":
+        return json.dumps(context, indent=2)
+    return _render_context_dense(context, max_tokens)
+
+
+@tool()
+def expand_memory(ids: list[int]) -> str:
+    """Drill-down dal contesto compatto: il contenuto COMPLETO di una o più memorie.
+
+    Args:
+        ids: Gli id (max 10) presi dai puntatori #id di get_context/recall.
+    """
+    out = []
+    for mid in ids[:10]:
+        m = store.get_memory(mid)
+        out.append(m if m else {"id": mid, "error": "not found"})
+    return json.dumps({"memories": out, "count": len(out)}, indent=2)
 
 
 # ── Status Tool ───────────────────────────────────────────────
@@ -580,6 +662,109 @@ def reject_insight(insight_id: int) -> str:
     """
     ok = store.set_insight_status(insight_id, "rejected")
     return json.dumps({"status": "rejected" if ok else "not_found", "insight_id": insight_id})
+
+
+# ── Consolidamento (Fase 4.15) ───────────────────────────────
+
+
+@tool()
+def consolidate(project: str | None = None, threshold: float = 0.86, max_groups: int = 8) -> str:
+    """Propose groups of redundant/overlapping memories to merge (READ-ONLY).
+
+    Finds clusters of highly-similar memories. Nothing is modified: review the
+    groups, write a synthesis yourself, then call merge_memories(...) — the
+    sources get marked superseded (never deleted, always recoverable).
+
+    Args:
+        project: Scope to a project (None = whole brain).
+        threshold: Cosine similarity above which two memories are considered redundant.
+        max_groups: Max candidate groups to return.
+    """
+    if not search_engine.semantic_available:
+        return json.dumps({"error": "consolidate richiede la ricerca semantica",
+                           "hint": "pip install 'wadachi[semantic]'"})
+    import numpy as np
+    mems = [m for m in store.get_memories_for_embedding(project)
+            if store.get_belief(m["id"])["status"] == "active"]
+    if len(mems) < 2:
+        return json.dumps({"groups": [], "count": 0})
+    search_engine._ensure_memory_embeddings(mems)
+    mems = [m for m in mems if m.get("embedding") is not None]
+
+    vecs = np.vstack([np.frombuffer(m["embedding"], dtype=np.float32)
+                      if isinstance(m["embedding"], bytes) else m["embedding"] for m in mems])
+    vecs = vecs / (np.linalg.norm(vecs, axis=1, keepdims=True) + 1e-9)
+    sims = vecs @ vecs.T
+
+    # union-find sulle coppie sopra soglia
+    parent = list(range(len(mems)))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    pair_sims = {}
+    for i in range(len(mems)):
+        for k in range(i + 1, len(mems)):
+            if sims[i, k] >= threshold:
+                parent[find(i)] = find(k)
+                pair_sims.setdefault(frozenset((i, k)), float(sims[i, k]))
+
+    clusters: dict[int, list[int]] = {}
+    for i in range(len(mems)):
+        clusters.setdefault(find(i), []).append(i)
+
+    groups = []
+    for members in clusters.values():
+        if len(members) < 2:
+            continue
+        pair_vals = [v for key, v in pair_sims.items() if key <= set(members)]
+        groups.append({
+            "ids": [mems[i]["id"] for i in members],
+            "similarity": round(max(pair_vals), 3) if pair_vals else threshold,
+            "memories": [{"id": mems[i]["id"], "title": mems[i]["title"],
+                          "preview": mems[i]["content"][:140]} for i in members],
+        })
+    groups.sort(key=lambda g: -g["similarity"])
+    return json.dumps({
+        "groups": groups[:max_groups],
+        "count": len(groups[:max_groups]),
+        "how_to_merge": "scrivi tu la sintesi, poi: merge_memories(source_ids=[...], title=..., content=...)",
+    }, indent=2)
+
+
+@tool()
+def merge_memories(source_ids: list[int], title: str, content: str,
+                   project: str = "global", tags: list[str] | None = None) -> str:
+    """Merge redundant memories: store the synthesis as a NEW memory and mark
+    the sources superseded (kept and recoverable — never deleted).
+
+    Args:
+        source_ids: The memories being consolidated (≥2).
+        title: Title of the merged memory.
+        content: The synthesis you wrote (the sources' provenance is appended automatically).
+        project: Project for the merged memory.
+        tags: Tags for the merged memory.
+    """
+    if len(source_ids) < 2:
+        return json.dumps({"error": "servono almeno 2 memorie da fondere"})
+    missing = [i for i in source_ids if store.get_memory(i) is None]
+    if missing:
+        return json.dumps({"error": f"memorie inesistenti: {missing}"})
+
+    refs = " ".join(f"[[#{i}]]" for i in source_ids)
+    mem = store.store_memory(
+        content=f"{content}\n\nConsolida: {refs}",
+        title=title, project=project,
+        tags=(tags or []) + ["consolidata"], category="context",
+    )
+    for sid in source_ids:
+        store.set_belief(sid, status="stale", superseded_by=mem["id"],
+                         review_reason=f"consolidata in #{mem['id']}")
+    return json.dumps({"status": "merged", "memory": mem,
+                       "superseded": source_ids}, indent=2)
 
 
 @tool()

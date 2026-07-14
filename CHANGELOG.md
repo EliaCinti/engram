@@ -3,6 +3,34 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.6.0] — 2026-07-14
+
+### Added — Fase 4 roadmap: efficienza token (28 tool)
+- **`get_context` a livelli** (4.12/4.14): default in formato **denso** — righe
+  compatte con puntatori `#id`, categoria e score invece del JSON verboso.
+  Sul brain reale: **~3.600 → ~430 token (-89%)**. `format="json"` resta come
+  escape hatch.
+- **Budget esplicito** (4.13): `get_context(max_tokens=N)` tronca **per
+  rilevanza** (mai per età): prima si accorciano needs_review e decisioni, poi
+  le memorie dalla coda; header, stats e footer sopravvivono sempre.
+- **`expand_memory(ids)`**: drill-down batch dal contesto compatto al contenuto
+  completo.
+- **Consolidamento** (4.15): `consolidate()` propone gruppi di memorie
+  ridondanti (similarità coseno, read-only); `merge_memories(...)` salva la TUA
+  sintesi e marca le fonti *superseded* via belief system — mai cancellate,
+  sempre recuperabili, con provenienza `[[#id]]` automatica.
+- **Decay score** (4.16): migrazione **0002** (access_count + last_accessed);
+  ogni `get_memory`/`expand_memory` ringiovanisce la memoria; le memorie mai
+  richiamate perdono fino al 12% di score (-2%/mese oltre il primo), in modo
+  trasparente (campo `decay` nei risultati).
+
+### Changed
+- Prima migrazione incrementale reale: i brain a schema v1 passano a v2 con
+  backup automatico (validato sul brain di produzione, 100 memorie).
+
+### Tests
+- 15 test nuovi (88 totali); i test delle migrazioni sono ora version-agnostic.
+
 ## [0.5.0] — 2026-07-14
 
 ### Added — Fase 3 roadmap: robustezza

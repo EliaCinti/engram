@@ -132,6 +132,8 @@ class MemoryStore:
         else:
             content = "[file missing]"
 
+        self.touch_access([memory_id])
+
         return {
             "id": row["id"],
             "title": row["title"],
@@ -430,7 +432,8 @@ class MemoryStore:
 
     def get_memories_for_embedding(self, project: str | None = None) -> list[dict]:
         """Get memories that need embedding or all memories for search."""
-        query = "SELECT id, title, tags, category, filepath, embedding FROM memories WHERE 1=1"
+        query = ("SELECT id, title, tags, category, filepath, embedding, "
+                 "created_at, access_count, last_accessed FROM memories WHERE 1=1")
         params: list = []
         if project:
             query += " AND (project = ? OR project = 'global')"
@@ -439,17 +442,13 @@ class MemoryStore:
         with self._conn() as conn:
             rows = conn.execute(query, params).fetchall()
 
+        from wadachi.mdio import parse_memory_file
         results = []
         for r in rows:
             filepath = self.brain_dir / r["filepath"]
             content = ""
             if filepath.exists():
-                raw = filepath.read_text(encoding="utf-8")
-                if raw.startswith("---"):
-                    parts = raw.split("---", 2)
-                    content = parts[2].strip() if len(parts) >= 3 else raw
-                else:
-                    content = raw
+                content = parse_memory_file(filepath.read_text(encoding="utf-8")).content
 
             results.append({
                 "id": r["id"],
@@ -459,6 +458,9 @@ class MemoryStore:
                 "content": content,
                 "has_embedding": r["embedding"] is not None,
                 "embedding": r["embedding"],
+                "created_at": r["created_at"],
+                "access_count": r["access_count"],
+                "last_accessed": r["last_accessed"],
             })
         return results
 
@@ -488,6 +490,17 @@ class MemoryStore:
     def save_embedding(self, table: str, row_id: int, embedding_bytes: bytes):
         with self._conn() as conn:
             conn.execute(f"UPDATE {table} SET embedding = ? WHERE id = ?", (embedding_bytes, row_id))
+
+    def touch_access(self, memory_ids: list[int]) -> None:
+        """Registra un accesso esplicito (get_memory/expand_memory) — alimenta il decay."""
+        if not memory_ids:
+            return
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as conn:
+            conn.executemany(
+                "UPDATE memories SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
+                [(now, mid) for mid in memory_ids],
+            )
 
     # ── Helpers ────────────────────────────────────────────────
 
