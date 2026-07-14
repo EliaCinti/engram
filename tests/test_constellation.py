@@ -112,3 +112,12 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def test_constellation_suite():
+    """Pytest shim: esegue l'intera suite storica (richiede embeddings)."""
+    import pytest
+    from wadachi import search
+    if not search._FASTEMBED_AVAILABLE:
+        pytest.skip("richiede fastembed (ricerca semantica)")
+    assert main() == 0
