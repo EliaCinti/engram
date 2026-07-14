@@ -1,0 +1,24 @@
+name: ✨ Feature request
+description: An idea that would make wadachi more useful
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that wadachi doesn't support (or makes awkward)?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your idea
+      description: How would you like it to work? Rough is fine.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Heads-up on philosophy: wadachi is local-first (no telemetry/cloud),
+        never deletes memories silently, and proposes rather than auto-edits.
+        Ideas that fit those rails have the best odds.

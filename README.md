@@ -375,6 +375,13 @@ Semantic search runs entirely on your machine — no API calls, no cloud, no cos
 
 ---
 
+## Contributing
+
+PRs welcome — read [CONTRIBUTING.md](CONTRIBUTING.md) first (philosophy: local-first,
+memories are sacred, propose don't auto-edit). Not a coder? The most valuable
+contribution is [telling us how you use wadachi](https://github.com/EliaCinti/wadachi/issues/new?template=share_your_setup.yml) —
+there's no telemetry, feedback is all we have.
+
 ## Acknowledgments
 
 Inspired by [mstrehse/mcp-brain](https://github.com/mstrehse/mcp-brain) — a Go-based MCP memory server that sparked the idea. Wadachi is a ground-up rewrite in Python with semantic search, project awareness, and auto-context injection.

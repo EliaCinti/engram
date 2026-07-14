@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [Unreleased]
+
+### Added — Fase 5 roadmap (parziale): community
+- `CONTRIBUTING.md` (filosofia, dev setup, regole per migrazioni/tool/logging).
+- Issue templates: bug report (chiede `wadachi doctor` + log), feature request,
+  **"Share your setup"** — il feedback loop privacy-first (5.19: zero telemetria,
+  il feedback volontario è l'unico canale). Template PR con checklist.
+
 ## [0.6.0] — 2026-07-14
 
 ### Added — Fase 4 roadmap: efficienza token (28 tool)

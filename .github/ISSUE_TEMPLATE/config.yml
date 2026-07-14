@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Docs & quickstart
+    url: https://github.com/EliaCinti/wadachi#quick-start
+    about: Install, wadachi init, upgrading — check the README first.
+  - name: 🌐 wadachi.eliacinti.dev
+    url: https://wadachi.eliacinti.dev
+    about: The live demo and project page.

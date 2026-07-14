@@ -1,0 +1,29 @@
+name: 🛤 Share your setup
+description: "No telemetry, ever — this is how we learn what works. Tell us how you use wadachi."
+labels: [feedback]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Wadachi collects **zero** data about you. The trade-off: we only learn
+        what's useful if you tell us. Five minutes here genuinely shapes the roadmap. 轍
+  - type: textarea
+    id: setup
+    attributes:
+      label: Your setup
+      description: Which client(s), how many projects, roughly how many memories, semantic or keyword?
+      placeholder: Claude Code + Cursor · 4 projects · ~200 memories · semantic
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: How wadachi fits your workflow
+      description: When do you store memories? What do you recall most? What surprised you?
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: Friction & wishes
+      description: What annoys you, what's missing, what would you remove?

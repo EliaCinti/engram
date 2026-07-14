@@ -1,0 +1,39 @@
+name: 🐛 Bug report
+description: Something broke or behaved unexpectedly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! Two commands give us almost everything we need:
+        `wadachi doctor` and the log file — please include both below.
+        **Never paste memory contents you consider private.**
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `wadachi doctor`
+      description: Run `wadachi doctor` (add `--no-mcp` if you prefer) and paste the output.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant log lines
+      description: "The last lines of `<brain>/logs/wadachi.log` around the failure (errors include full tracebacks)."
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version & client
+      description: "`wadachi --version` + which MCP client (Claude Code, Desktop, Cursor, …)"
+      placeholder: wadachi 0.6.0 · Claude Code · macOS
+    validations:
+      required: true
