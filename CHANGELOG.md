@@ -3,6 +3,29 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.5.0] — 2026-07-14
+
+### Added — Fase 3 roadmap: robustezza
+- **Parser Markdown tollerante** (`wadachi/mdio.py`): i file memoria si leggono
+  sempre — frontmatter assente, malformato o non chiuso, tag in JSON/YAML/CSV,
+  `---` nel corpo: mai un'eccezione. Usato da `get_memory` al posto dello split
+  fragile. **Backfill**: riscrittura trasparente nel formato canonico usando i
+  metadata del DB come fonte autorevole (il contenuto non si tocca mai).
+- **Logging strutturato** (`wadachi/log.py`): stderr per i soli WARNING+ (mai
+  stdout: è il canale MCP), file rotante `<brain>/logs/wadachi.log` con livello
+  da `$WADACHI_LOG`. Ogni tool è strumentato: durata a DEBUG, errori con
+  traceback completo — un utente può allegare un log leggibile a una segnalazione.
+- **`wadachi doctor`**: diagnostica di config, permessi, DB (integrity_check,
+  versione schema vs migrazioni disponibili), file .md (mancanti / orfani /
+  frontmatter rotto), fastembed, registrazione in Claude Code. La diagnosi è
+  **read-only** (DB aperto in modalità ro, nessuna migrazione applicata);
+  `--fix` ripara solo ciò che è sicuro: directory mancanti e frontmatter
+  (backfill dal DB). Exit code 0/1.
+
+### Tests
+- 16 test nuovi (73 totali): parser su input degeneri, doctor su brain sano /
+  DB corrotto / file mancanti / orfani, garanzia read-only della diagnosi.
+
 ## [0.4.0] — 2026-07-14
 
 ### Added — Fase 2 roadmap: distribuzione

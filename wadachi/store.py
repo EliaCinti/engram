@@ -124,12 +124,13 @@ class MemoryStore:
             return None
 
         filepath = self.brain_dir / row["filepath"]
-        content = filepath.read_text(encoding="utf-8") if filepath.exists() else "[file missing]"
-        # Strip frontmatter
-        if content.startswith("---"):
-            parts = content.split("---", 2)
-            if len(parts) >= 3:
-                content = parts[2].strip()
+        if filepath.exists():
+            # parser tollerante: file editati a mano o con frontmatter rotto
+            # non fanno mai fallire la lettura (vedi wadachi/mdio.py)
+            from wadachi.mdio import parse_memory_file
+            content = parse_memory_file(filepath.read_text(encoding="utf-8")).content
+        else:
+            content = "[file missing]"
 
         return {
             "id": row["id"],

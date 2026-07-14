@@ -1,5 +1,5 @@
 """
-Engram MCP Server — persistent memory + semantic search for Claude Code / Desktop.
+Wadachi MCP Server — persistent memory + semantic search for Claude Code / Desktop.
 
 Tools (25), grouped by area:
   Memory:       store_memory, get_memory, list_memories, update_memory, delete_memory, memory_history
@@ -12,14 +12,18 @@ Tools (25), grouped by area:
   Procedural:   review_procedures
 """
 
+import functools
 import json
 import os
 import sys
+import time
 
 # Add parent dir to path so imports work when run directly
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
+from wadachi import __version__
+from wadachi.log import setup as _log_setup
 from wadachi.store import MemoryStore
 from wadachi.search import SearchEngine
 from wadachi.graph import MemoryGraph
@@ -34,8 +38,37 @@ from wadachi.procedural import ProceduralReviewer
 _legacy_brain = os.path.expanduser("~/.engram")
 _default_brain = _legacy_brain if os.path.isdir(_legacy_brain) else os.path.expanduser("~/.wadachi")
 brain_dir = os.environ.get("BRAIN_DIR", _default_brain)
+log = _log_setup(brain_dir)
 store = MemoryStore(brain_dir)
 search_engine = SearchEngine(store)
+log.info("wadachi %s — brain: %s, search: %s", __version__, brain_dir,
+         "semantic" if search_engine.semantic_available else "keyword")
+
+
+def _instrumented(fn):
+    """Ogni tool loggato: durata a DEBUG, eccezioni con traceback a ERROR.
+
+    Le eccezioni vengono ri-alzate (il protocollo MCP le riporta al client);
+    il log su file è ciò che l'utente può allegare a una segnalazione.
+    """
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        try:
+            out = fn(*args, **kwargs)
+            log.debug("tool %s ok (%.0f ms)", fn.__name__, (time.perf_counter() - t0) * 1000)
+            return out
+        except Exception:
+            log.exception("tool %s FALLITO (args=%r kwargs=%r)", fn.__name__, args, kwargs)
+            raise
+    return wrapper
+
+
+def tool(*dargs, **dkwargs):
+    """Come @mcp.tool(), ma con logging trasparente."""
+    def deco(fn):
+        return mcp.tool(*dargs, **dkwargs)(_instrumented(fn))
+    return deco
 
 mcp = FastMCP(
     "wadachi",
@@ -75,7 +108,7 @@ mcp = FastMCP(
 # ── Memory Tools ──────────────────────────────────────────────
 
 
-@mcp.tool()
+@tool()
 def store_memory(
     content: str,
     title: str,
@@ -96,7 +129,7 @@ def store_memory(
     return json.dumps(result, indent=2)
 
 
-@mcp.tool()
+@tool()
 def recall(
     query: str,
     project: str | None = None,
@@ -125,7 +158,7 @@ def recall(
     }, indent=2)
 
 
-@mcp.tool()
+@tool()
 def get_memory(memory_id: int) -> str:
     """Retrieve the full content of a specific memory by its ID.
 
@@ -138,7 +171,7 @@ def get_memory(memory_id: int) -> str:
     return json.dumps(result, indent=2)
 
 
-@mcp.tool()
+@tool()
 def list_memories(
     project: str | None = None,
     category: str | None = None,
@@ -153,7 +186,7 @@ def list_memories(
     return json.dumps({"memories": results, "count": len(results)}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def update_memory(
     memory_id: int,
     content: str | None = None,
@@ -172,7 +205,7 @@ def update_memory(
     return json.dumps({"error": f"Memory #{memory_id} not found."})
 
 
-@mcp.tool()
+@tool()
 def delete_memory(memory_id: int) -> str:
     """Permanently delete a memory from the Brain.
 
@@ -188,7 +221,7 @@ def delete_memory(memory_id: int) -> str:
 # ── Decision Tools ────────────────────────────────────────────
 
 
-@mcp.tool()
+@tool()
 def store_decision(
     decision: str,
     rationale: str = "",
@@ -209,7 +242,7 @@ def store_decision(
     return json.dumps(result, indent=2)
 
 
-@mcp.tool()
+@tool()
 def list_decisions(
     project: str | None = None,
     limit: int = 20,
@@ -227,7 +260,7 @@ def list_decisions(
 # ── Project Tools ─────────────────────────────────────────────
 
 
-@mcp.tool()
+@tool()
 def register_project(
     name: str,
     description: str = "",
@@ -244,7 +277,7 @@ def register_project(
     return json.dumps(result, indent=2)
 
 
-@mcp.tool()
+@tool()
 def list_projects() -> str:
     """List all registered projects."""
     results = store.list_projects()
@@ -254,7 +287,7 @@ def list_projects() -> str:
 # ── Context Tool (the killer feature) ────────────────────────
 
 
-@mcp.tool()
+@tool()
 def get_context(
     cwd: str = "",
     task_description: str = "",
@@ -315,7 +348,7 @@ def get_context(
 # ── Status Tool ───────────────────────────────────────────────
 
 
-@mcp.tool()
+@tool()
 def brain_status() -> str:
     """Check Brain health and statistics."""
     stats = store.stats()
@@ -343,7 +376,7 @@ def _assoc_graph(project: str | None) -> MemoryGraph:
     return g
 
 
-@mcp.tool()
+@tool()
 def recall_associative(query: str, project: str | None = None, limit: int = 5) -> str:
     """Spreading-activation recall over the memory graph (HippoRAG-style).
 
@@ -370,7 +403,7 @@ def recall_associative(query: str, project: str | None = None, limit: int = 5) -
         }, indent=2)
 
 
-@mcp.tool()
+@tool()
 def related_memories(memory_id: int, limit: int = 8) -> str:
     """Show the memories most strongly linked to a given one (typed neighbours).
 
@@ -382,7 +415,7 @@ def related_memories(memory_id: int, limit: int = 8) -> str:
     return json.dumps({"id": memory_id, "related": g.related(memory_id, limit)}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def memory_graph(project: str | None = None, focus_id: int | None = None,
                  include_entities: bool = True) -> str:
     """Overview of the brain as a graph: hubs, orphans, components, a Mermaid
@@ -402,7 +435,7 @@ def memory_graph(project: str | None = None, focus_id: int | None = None,
     return json.dumps(out, indent=2)
 
 
-@mcp.tool()
+@tool()
 def rebuild_entity_graph(project: str | None = None) -> str:
     """(Re)build the Graphify entity knowledge graph over the brain.
 
@@ -413,7 +446,7 @@ def rebuild_entity_graph(project: str | None = None) -> str:
     return json.dumps(EntityGraph(store).rebuild(), indent=2)
 
 
-@mcp.tool()
+@tool()
 def memory_history(memory_id: int) -> str:
     """Show prior versions of a memory (preserved on every update — non-destructive).
 
@@ -445,7 +478,7 @@ def _annotate_beliefs(results: list[dict]) -> list[dict]:
     return out
 
 
-@mcp.tool()
+@tool()
 def review_beliefs(project: str | None = None) -> str:
     """Scan the brain for memories that have likely gone stale and need review:
     superseded by a newer memory, past a temporal deadline, conditional/provisional,
@@ -458,7 +491,7 @@ def review_beliefs(project: str | None = None) -> str:
     return json.dumps({"flagged": flagged, "count": len(flagged)}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def set_belief(memory_id: int, confidence: float | None = None, status: str | None = None,
                valid_until: str | None = None, review_reason: str | None = None,
                superseded_by: int | None = None) -> str:
@@ -477,7 +510,7 @@ def set_belief(memory_id: int, confidence: float | None = None, status: str | No
                                        superseded_by=superseded_by), indent=2)
 
 
-@mcp.tool()
+@tool()
 def flag_stale(memory_id: int, reason: str, superseded_by: int | None = None) -> str:
     """Mark a memory as stale: kept and recoverable, but annotated in recall.
 
@@ -493,7 +526,7 @@ def flag_stale(memory_id: int, reason: str, superseded_by: int | None = None) ->
 # ── Reflection & procedural (Phase 3) ────────────────────────
 
 
-@mcp.tool()
+@tool()
 def reflect(project: str | None = None, limit: int = 15, store_them: bool = True) -> str:
     """Think across memories: surface cross-project analogies and non-obvious
     connections that recall cannot reach (reuses the Graphify graph — no extra LLM
@@ -510,14 +543,14 @@ def reflect(project: str | None = None, limit: int = 15, store_them: bool = True
     return json.dumps({"candidates": cands, "stored": len(saved), "count": len(cands)}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def list_insights(status: str | None = "proposed") -> str:
     """List reflection insights, optionally by status (proposed | accepted | rejected)."""
     items = store.list_insights(status=status)
     return json.dumps({"insights": items, "count": len(items)}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def accept_insight(insight_id: int, project: str = "global") -> str:
     """Accept an insight: mark it accepted and promote it to a real memory linked
     to its source memories.
@@ -538,7 +571,7 @@ def accept_insight(insight_id: int, project: str = "global") -> str:
     return json.dumps({"status": "accepted", "insight_id": insight_id, "memory": mem}, indent=2)
 
 
-@mcp.tool()
+@tool()
 def reject_insight(insight_id: int) -> str:
     """Reject an insight (kept on record, marked rejected).
 
@@ -549,7 +582,7 @@ def reject_insight(insight_id: int) -> str:
     return json.dumps({"status": "rejected" if ok else "not_found", "insight_id": insight_id})
 
 
-@mcp.tool()
+@tool()
 def review_procedures(project: str | None = None) -> str:
     """Find recurring-incident clusters and propose always-on rules for review.
     Read-only — never edits your operating instructions.

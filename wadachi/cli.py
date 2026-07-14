@@ -125,10 +125,21 @@ def main() -> int:
                         help="non scrivere la config Antigravity")
     p_init.add_argument("--antigravity-dir", help=argparse.SUPPRESS)  # per i test
 
+    p_doc = sub.add_parser("doctor", help="diagnostica: config, DB, permessi, file, schema")
+    p_doc.add_argument("--brain-dir", help="brain da diagnosticare (default come init)")
+    p_doc.add_argument("--fix", action="store_true",
+                       help="ripara ciò che è sicuro riparare (dir mancanti, frontmatter)")
+    p_doc.add_argument("--no-mcp", action="store_true",
+                       help="salta il controllo della registrazione in Claude Code")
+
     args = parser.parse_args()
 
     if args.command == "init":
         return cmd_init(args)
+    if args.command == "doctor":
+        from wadachi.doctor import run_doctor
+        brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()
+        return run_doctor(brain, fix=args.fix, check_mcp=not args.no_mcp)
 
     # nessun sottocomando → server MCP (import lazy: init non deve toccare
     # il BRAIN_DIR di default solo per colpa dell'import del server)
