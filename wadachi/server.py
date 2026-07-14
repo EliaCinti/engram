@@ -358,7 +358,16 @@ def recall_associative(query: str, project: str | None = None, limit: int = 5) -
         limit: Number of results.
     """
     g = _assoc_graph(project)
-    return json.dumps(g.associative_recall(query, limit=limit), indent=2)
+    try:
+        return json.dumps(g.associative_recall(query, limit=limit), indent=2)
+    except RuntimeError as e:
+        # senza fastembed il recall associativo non può embeddare la query:
+        # niente crash MCP — errore chiaro + fallback keyword utilizzabile
+        return json.dumps({
+            "error": str(e),
+            "hint": "recall_associative richiede la ricerca semantica: pip install 'wadachi[semantic]'.",
+            "keyword_fallback": json.loads(recall(query, project=project, limit=limit)),
+        }, indent=2)
 
 
 @mcp.tool()
