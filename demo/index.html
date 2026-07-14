@@ -3,27 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engram — Persistent memory for AI workflows</title>
-<meta name="description" content="Your AI forgets everything between sessions. Engram is a local-first MCP memory server: persistent memory, semantic search, auto-context, a decision log, and a thinking knowledge graph.">
-<meta property="og:title" content="Engram — Persistent memory for AI workflows">
-<meta property="og:description" content="Your AI forgets everything between sessions. Engram fixes that.">
+<title>wadachi 轍 — Persistent memory for AI agents</title>
+<meta name="description" content="Your AI forgets everything between sessions. Wadachi (轍 — the tracks wheels leave in a road) is a local-first MCP memory server: persistent memory, semantic search, auto-context, a decision log, and a thinking knowledge graph.">
+<meta property="og:title" content="wadachi 轍 — Persistent memory for AI agents">
+<meta property="og:description" content="Your sessions leave tracks. Future sessions follow them.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238b7cf6' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2334d3ee'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101012'/%3E%3Cpath d='M5 11.5C5 10.4 5.9 9.6 7 9.7L21 10.6C23.5 10.8 25.5 11.2 27 11.8C25.5 12.3 23.5 12.5 21 12.5L7 13.2C5.9 13.3 5 12.6 5 11.5Z' fill='%23E8E4DC'/%3E%3Cpath d='M5 19.5C5 18.4 5.9 17.6 7 17.7L19.5 18.6C22 18.8 24 19.2 25.5 19.8C24 20.3 22 20.5 19.5 20.5L7 21.2C5.9 21.3 5 20.6 5 19.5Z' fill='%23E8E4DC'/%3E%3Crect x='23' y='23' width='5' height='5' rx='1.4' fill='%23D9442B'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
 <!-- ── NAV ───────────────────────────────────────────────── -->
 <header class="nav">
   <a class="brand" href="#top">
-    <span class="brand-mark">◉</span>
-    <span class="brand-name">Engram</span>
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="40 130 470 310" xmlns="http://www.w3.org/2000/svg">
+        <g fill="currentColor">
+          <path d="M 74 184 C 64 166, 76 150, 96 150 C 170 146, 264 158, 344 174 C 394 183, 434 193, 462 205 C 434 211, 394 212, 344 208 C 264 202, 166 200, 96 212 C 80 214, 68 200, 74 184 Z"/>
+          <path d="M 470 203 C 484 201, 494 201, 502 199 C 494 207, 484 209, 470 210 Z"/>
+          <path d="M 74 300 C 64 282, 76 266, 96 266 C 170 262, 260 274, 336 290 C 382 299, 418 309, 444 319 C 418 325, 382 326, 336 322 C 260 316, 166 314, 96 328 C 80 330, 68 316, 74 300 Z"/>
+          <path d="M 452 317 C 466 315, 476 315, 486 313 C 476 321, 466 323, 452 324 Z"/>
+        </g>
+        <rect x="410" y="376" width="56" height="56" rx="10" fill="#D9442B"/>
+      </svg>
+    </span>
+    <span class="brand-name">wadachi</span>
   </a>
   <nav class="nav-links">
     <a href="#features">Features</a>
     <a href="#how">How it works</a>
     <a href="#start">Quick start</a>
-    <a class="nav-gh" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">
+    <a class="nav-gh" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">
       GitHub ↗
     </a>
   </nav>
@@ -37,15 +47,16 @@
       <div class="hero-grid">
 
         <div class="hero-left">
-          <div class="pill">◉ engram · persistent memory · MCP</div>
-          <h1 id="hero-h1" class="reveal-words"><span class="w">Persistent</span> <span class="w"><span class="hl">memory</span></span> <span class="w">for</span> <span class="w">AI</span> <span class="w">workflows</span></h1>
+          <div class="pill"><span class="seal">轍</span> wadachi · persistent memory · MCP</div>
+          <h1 id="hero-h1" class="reveal-words"><span class="w">Your</span> <span class="w">sessions</span> <span class="w">leave</span> <span class="w"><span class="hl">tracks</span>.</span></h1>
           <p class="lede">
+            <em>Wadachi (轍): the tracks wheels leave in a road.</em>
             Your AI forgets everything between sessions — re-reading files,
             re-deriving architecture, re-debating solved problems.
-            <strong>Engram gives it a brain that stays.</strong>
+            <strong>Wadachi gives it tracks that stay.</strong>
           </p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">View on GitHub ↗</a>
+            <a class="btn btn-primary" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">View on GitHub ↗</a>
             <a class="btn btn-ghost" href="#start">Quick start</a>
           </div>
 
@@ -53,7 +64,7 @@
           <div class="terminal" aria-hidden="true">
             <div class="term-head">
               <span class="td r"></span><span class="td y"></span><span class="td g"></span>
-              <span class="tt">engram · recall.log</span>
+              <span class="tt">wadachi · recall.log</span>
             </div>
             <div class="term-body">
               <div class="term-line"><span class="prompt">›</span> <span id="term-q"></span><span class="caret"></span></div>
@@ -63,7 +74,7 @@
         </div>
 
         <div class="hero-right">
-          <svg id="hero-svg" viewBox="0 0 600 540" role="img" aria-label="Engram knowledge graph building"></svg>
+          <svg id="hero-svg" viewBox="0 0 600 540" role="img" aria-label="Wadachi knowledge graph building"></svg>
           <div class="build-meta">
             <div class="bm-count"><span id="node-count">0</span><span class="bm-lbl">nodes indexed</span></div>
             <div class="bm-bar"><span id="build-progress"></span></div>
@@ -96,7 +107,7 @@
     <div class="kicker green">The solution</div>
     <h2>A brain that <span class="hl">survives</span> the session.</h2>
     <p>
-      Engram gives your AI a <strong>persistent, local knowledge base</strong>.
+      Wadachi gives your AI a <strong>persistent, local knowledge base</strong>.
       It stores insights, decisions and patterns as you work, then retrieves the
       relevant ones instantly at the start of the next session.
     </p>
@@ -114,7 +125,7 @@
     <div class="kicker">What's inside</div>
     <h2>Memory that doesn't just store — it <span class="hl">thinks</span>.</h2>
     <p class="section-sub">
-      Most memory tools make knowledge searchable. Engram makes it active:
+      Most memory tools make knowledge searchable. Wadachi makes it active:
       it connects, revises, reflects, and learns how you work.
     </p>
   </div>
@@ -159,7 +170,7 @@
     <article class="card">
       <div class="card-icon">⟳</div>
       <h3>Belief revision</h3>
-      <p>Memories are beliefs with an epistemic envelope. Engram flags what's gone
+      <p>Memories are beliefs with an epistemic envelope. Wadachi flags what's gone
          <strong>stale</strong> or been <strong>superseded</strong>, so a session opens knowing what
          it can no longer trust.</p>
     </article>
@@ -190,12 +201,12 @@
     <div class="step">
       <div class="step-n">1</div>
       <h3>Connect the MCP server</h3>
-      <p>One command wires Engram into Claude Code, Claude Desktop, Cursor — any MCP client.</p>
+      <p>One command wires Wadachi into Claude Code, Claude Desktop, Cursor — any MCP client.</p>
     </div>
     <div class="step">
       <div class="step-n">2</div>
       <h3>Register your projects</h3>
-      <p>Map filesystem paths to a project name. Engram auto-detects which one you're in and
+      <p>Map filesystem paths to a project name. Wadachi auto-detects which one you're in and
          scopes memories accordingly.</p>
     </div>
     <div class="step">
@@ -227,15 +238,15 @@
     <h2>Give your AI a <span class="hl">memory</span>.</h2>
     <p>Clone it, connect it, and never re-explain your codebase again.</p>
     <pre class="code wide"><code># clone &amp; install (semantic search included)
-git clone https://github.com/EliaCinti/engram.git
-cd engram
+git clone https://github.com/EliaCinti/wadachi.git
+cd wadachi
 pip install -e ".[semantic]"
 
 # connect to Claude Code
-claude mcp add engram -- python "$(pwd)/engram/server.py"</code></pre>
+claude mcp add wadachi -- python "$(pwd)/wadachi/server.py"</code></pre>
     <div class="cta-row center">
-      <a class="btn btn-primary" href="https://github.com/EliaCinti/engram" target="_blank" rel="noopener">Star on GitHub ↗</a>
-      <a class="btn btn-ghost" href="https://github.com/EliaCinti/engram#quick-start" target="_blank" rel="noopener">Read the docs</a>
+      <a class="btn btn-primary" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">Star on GitHub ↗</a>
+      <a class="btn btn-ghost" href="https://github.com/EliaCinti/wadachi#quick-start" target="_blank" rel="noopener">Read the docs</a>
     </div>
   </div>
 </section>
@@ -243,8 +254,18 @@ claude mcp add engram -- python "$(pwd)/engram/server.py"</code></pre>
 <!-- ── FOOTER ────────────────────────────────────────────── -->
 <footer class="footer">
   <div class="brand">
-    <span class="brand-mark">◉</span>
-    <span class="brand-name">Engram</span>
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="40 130 470 310" xmlns="http://www.w3.org/2000/svg">
+        <g fill="currentColor">
+          <path d="M 74 184 C 64 166, 76 150, 96 150 C 170 146, 264 158, 344 174 C 394 183, 434 193, 462 205 C 434 211, 394 212, 344 208 C 264 202, 166 200, 96 212 C 80 214, 68 200, 74 184 Z"/>
+          <path d="M 470 203 C 484 201, 494 201, 502 199 C 494 207, 484 209, 470 210 Z"/>
+          <path d="M 74 300 C 64 282, 76 266, 96 266 C 170 262, 260 274, 336 290 C 382 299, 418 309, 444 319 C 418 325, 382 326, 336 322 C 260 316, 166 314, 96 328 C 80 330, 68 316, 74 300 Z"/>
+          <path d="M 452 317 C 466 315, 476 315, 486 313 C 476 321, 466 323, 452 324 Z"/>
+        </g>
+        <rect x="410" y="376" width="56" height="56" rx="10" fill="#D9442B"/>
+      </svg>
+    </span>
+    <span class="brand-name">wadachi</span>
   </div>
   <p class="footer-note">
     Built by <a href="https://eliacinti.dev" target="_blank" rel="noopener">Elia Cinti — eliacinti.dev</a>
@@ -253,9 +274,10 @@ claude mcp add engram -- python "$(pwd)/engram/server.py"</code></pre>
     The graph above is a self-contained interactive demo on a <em>fictional</em> project.
     No real data.
   </p>
+  <div class="footer-kanji" aria-hidden="true">轍</div>
 </footer>
 
-<!-- graphify-style hero engine — pure vanilla JS, no external libs -->
-<script src="app.js?v=3"></script>
+<!-- sumi-style hero engine — pure vanilla JS, no external libs -->
+<script src="app.js?v=4"></script>
 </body>
 </html>

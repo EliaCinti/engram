@@ -1,18 +1,20 @@
-/* ── Engram landing — graphify-style hero ──────────────────────────
+/* ── wadachi 轍 landing — sumi-style hero ──────────────────────────
    A designed hub-and-spoke knowledge graph (SVG) that SELF-ASSEMBLES
    when it scrolls into view, reacts to the cursor (nodes repel with a
    springy jelly), then lives (particle flow + halo breathing). Plus a
    decoding headline, a terminal recall ticker, and faint glyph rain.
-   Engram violet/cyan palette. Pure vanilla JS — no external libs.     */
+   Sumi palette: ink #E8E4DC on paper-night, vermilion seal #D9442B.
+   The blur layer reads as nijimi — ink bleeding into the paper.
+   Pure vanilla JS — no external libs.                                 */
 
 (function () {
   "use strict";
 
-  var V = "#8b7cf6", C = "#34d3ee";
+  var V = "#E8E4DC" /* ink */, C = "#D9442B" /* vermilion */;
   var CAT = {
-    architecture: "#7aa2ff", bugfix: "#ff6b6b", config: "#f4a259",
-    pattern: "#c792ea", context: "#5ec8a0", reference: "#56c2d6",
-    decision: "#f7c948", entity: "#8b7cf6",
+    architecture: "#8FA3B8", bugfix: "#C96A5A", config: "#C9972C",
+    pattern: "#A08BB8", context: "#7A8B5E", reference: "#6FA3A0",
+    decision: "#D0B054", entity: "#8A857B",
   };
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var SVGNS = "http://www.w3.org/2000/svg";
@@ -100,7 +102,7 @@
   // edges — plain lines, opacity-revealed, endpoints follow displaced nodes
   edges.forEach(function (e) {
     var ln = mk("line");
-    ln.setAttribute("stroke", e.cross ? "rgba(139,124,246,0.55)" : "rgba(52,211,238,0.6)");
+    ln.setAttribute("stroke", e.cross ? "rgba(217,68,43,0.45)" : "rgba(232,228,220,0.45)");
     ln.setAttribute("stroke-width", e.main ? 1.4 : 0.9);
     ln.setAttribute("stroke-linecap", "round");
     ln.setAttribute("opacity", "0");
@@ -109,7 +111,7 @@
     // one travelling particle per edge
     var pt = mk("circle");
     pt.setAttribute("r", e.main ? 2.2 : 1.6);
-    pt.setAttribute("fill", e.cross ? V : C);
+    pt.setAttribute("fill", e.cross ? C : V);
     pt.setAttribute("opacity", "0");
     e.particle = pt; e.pPhase = Math.random();
     gParticles.appendChild(pt);
@@ -304,17 +306,17 @@
     if (!qEl || !rEl) return;
     var QUERIES = [
       { q: 'recall("why Yjs over Automerge?")', r: [
-        ["#34d3ee", "decision_03 → Yjs: smaller payload, faster merge"],
-        ["#8b7cf6", "architecture_11 ↔ CRDT layer mentions Yjs"],
-        ["#f7c948", "note_02 → Automerge revisit if memory grows"]] },
+        ["#D0B054", "decision_03 → Yjs: smaller payload, faster merge"],
+        ["#8FA3B8", "architecture_11 ↔ CRDT layer mentions Yjs"],
+        ["#9B958A", "note_02 → Automerge revisit if memory grows"]] },
       { q: 'get_context("realtime sync")', r: [
-        ["#34d3ee", "config_06 → Redis pub/sub fan-out"],
-        ["#8b7cf6", "bugfix_08 → WS reconnect backoff"],
-        ["#5ec8a0", "context_01 → p95 latency budget = 80ms"]] },
+        ["#C9972C", "config_06 → Redis pub/sub fan-out"],
+        ["#C96A5A", "bugfix_08 → WS reconnect backoff"],
+        ["#7A8B5E", "context_01 → p95 latency budget = 80ms"]] },
       { q: 'recall_associative("stale beliefs")', r: [
-        ["#f7c948", "config_04 ⚠ CI still on Node 18 (EOL)"],
-        ["#8b7cf6", "pattern_05 → supersede on schema bump"],
-        ["#34d3ee", "reflect → 2 memories flagged for review"]] },
+        ["#D0B054", "config_04 ⚠ CI still on Node 18 (EOL)"],
+        ["#A08BB8", "pattern_05 → supersede on schema bump"],
+        ["#D9442B", "reflect → 2 memories flagged for review"]] },
     ];
     var qi = 0;
     function type(q, done) {
@@ -355,15 +357,15 @@
     var c = document.getElementById("rain");
     if (!c || reduce) return;
     var ctx = c.getContext("2d");
-    var CH = "ΨΩΣ∇λπ01ΔΦ100110∂∫";
+    var CH = "轍跡道憶識層ΨΣ∇λπ01∂∫";
     var Wd, Hd, drops;
     function rs() {
       Wd = c.width = c.offsetWidth; Hd = c.height = c.offsetHeight;
       drops = Array.from({ length: Math.floor(Wd / 22) }, function () { return (Math.random() * Hd / 16) | 0; });
     }
     function draw() {
-      ctx.fillStyle = "rgba(7,8,12,0.16)"; ctx.fillRect(0, 0, Wd, Hd);
-      ctx.fillStyle = "rgba(139,124,246,0.55)"; ctx.font = "12px 'JetBrains Mono',monospace";
+      ctx.fillStyle = "rgba(16,16,18,0.16)"; ctx.fillRect(0, 0, Wd, Hd);
+      ctx.fillStyle = "rgba(232,228,220,0.45)"; ctx.font = "12px 'JetBrains Mono',monospace";
       drops.forEach(function (y, i) {
         ctx.fillText(CH[(Math.random() * CH.length) | 0], i * 22, y * 16);
         if (y * 16 > Hd && Math.random() > 0.975) drops[i] = 0; else drops[i]++;

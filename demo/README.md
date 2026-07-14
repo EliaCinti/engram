@@ -1,8 +1,8 @@
-# Engram — public demo site
+# Wadachi — public demo site
 
 A self-contained, static landing page + interactive knowledge-graph demo for
-**Engram**, the persistent-memory MCP server. Meant to live at
-`engram.eliacinti.dev`.
+**Wadachi**, the persistent-memory MCP server. Meant to live at
+`wadachi.eliacinti.dev`.
 
 Dark, product-style landing à la graphifylabs.ai: a hub-and-spoke knowledge
 graph that **builds as you scroll**, a decoding headline, a live recall
@@ -10,7 +10,7 @@ terminal, then problem/solution, a feature grid, "how it works", and a
 quick-start CTA.
 
 > The graph shows a **100% fictional** example brain. It never touches the real
-> `~/.engram/brain.db`, and every number on the page is honest (the counter
+> `~/.wadachi/brain.db`, and every number on the page is honest (the counter
 > reports the nodes actually drawn — nothing inflated). See *Dataset* below.
 
 ---
@@ -52,7 +52,7 @@ python3 -m http.server 8000
   breathe, and a faint glyph-rain canvas sits behind it all.
 - Everything honours `prefers-reduced-motion` (static, fully readable fallback).
 
-Palette is Engram's own violet `#8b7cf6` / cyan `#34d3ee` on near-black
+Palette is Wadachi's own violet `#8b7cf6` / cyan `#34d3ee` on near-black
 `#07080c`, matching the README and `eliacinti.dev`.
 
 ---
@@ -64,21 +64,21 @@ Same pattern as `briefing.eliacinti.dev → /usr/share/nginx/briefing`.
 **One-line deploy** (rsync the static files to the VPS):
 
 ```bash
-rsync -avz --delete ./ USER@VPS:/usr/share/nginx/engram/
+rsync -avz --delete ./ USER@VPS:/usr/share/nginx/wadachi/
 ```
 
-### nginx server block — `engram.eliacinti.dev`
+### nginx server block — `wadachi.eliacinti.dev`
 
-Drop this in `/etc/nginx/sites-available/engram.eliacinti.dev` (or your conf.d),
+Drop this in `/etc/nginx/sites-available/wadachi.eliacinti.dev` (or your conf.d),
 then `ln -s … sites-enabled/`, `nginx -t`, `systemctl reload nginx`.
 
 ```nginx
 server {
     listen 80;
     listen [::]:80;
-    server_name engram.eliacinti.dev;
+    server_name wadachi.eliacinti.dev;
 
-    root /usr/share/nginx/engram;
+    root /usr/share/nginx/wadachi;
     index index.html;
 
     # static site — try the file, else fall back to index.html
@@ -127,11 +127,11 @@ open-source CRDT real-time-sync engine (Yjs core, WebSocket server, Redis
 fan-out, Postgres snapshots, React hooks). None of it is real; no person, repo,
 or path belongs to Elia.
 
-- A central **`get_context`** hub wired to Engram's six faculties
+- A central **`get_context`** hub wired to Wadachi's six faculties
   (recall · decisions · constellation · beliefs · reflect · procedural).
 - A ring of **memories** hanging off each faculty, plus a few cross-links so it
   reads as a graph, not a tree.
-- The recall terminal cycles real-shaped Engram queries
+- The recall terminal cycles real-shaped Wadachi queries
   (`recall(...)`, `get_context(...)`, `recall_associative(...)`) returning
   connected memories/decisions — including one `stale` belief flagged for review.
 
