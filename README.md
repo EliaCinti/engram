@@ -20,6 +20,7 @@ Works with Claude Code, Claude Desktop, Cursor, and any MCP-compatible editor.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![MCP](https://img.shields.io/badge/protocol-MCP-e64a19?style=flat-square)](https://modelcontextprotocol.io)
 [![CI](https://img.shields.io/github/actions/workflow/status/EliaCinti/wadachi/ci.yml?style=flat-square&label=CI&labelColor=18181B)](https://github.com/EliaCinti/wadachi/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/wadachi?style=flat-square&color=D9442B&labelColor=18181B)](https://pypi.org/project/wadachi/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-wadachi.eliacinti.dev-D9442B?style=flat-square)](https://wadachi.eliacinti.dev)
 
@@ -124,24 +125,33 @@ graph TB
 
 ## Quick Start
 
-### 1 · Install
+Three commands and your AI has a memory:
 
 ```bash
-git clone https://github.com/eliacinti/wadachi.git
+# 1 · install (pipx or uv — semantic search included, runs locally)
+pipx install "wadachi[semantic]"        # or: uv tool install "wadachi[semantic]"
+
+# 2 · guided setup: brain dir, database, Claude Code registration
+wadachi init
+
+# 3 · restart Claude Code — every session now starts with get_context
+```
+
+`wadachi init` creates the brain directory (default `~/.wadachi`), brings the
+database to the latest schema, and registers the MCP server in Claude Code and
+Antigravity automatically. It is idempotent — safe to re-run anytime.
+
+<details>
+<summary>Install from source</summary>
+
+```bash
+git clone https://github.com/EliaCinti/wadachi.git
 cd wadachi
-
-# Base install (keyword search only)
-pip install -e .
-
-# Recommended: with semantic search (~200MB model, runs locally)
 pip install -e ".[semantic]"
+wadachi init
 ```
 
-### 2 · Connect to Claude Code
-
-```bash
-claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
-```
+</details>
 
 <details>
 <summary>Manual configuration (Claude Code / Desktop / Cursor)</summary>
@@ -151,8 +161,8 @@ claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
 {
   "mcpServers": {
     "wadachi": {
-      "command": "python",
-      "args": ["/absolute/path/to/wadachi/wadachi/server.py"],
+      "command": "wadachi",
+      "args": [],
       "env": {
         "BRAIN_DIR": "/Users/you/.wadachi"
       }
@@ -166,8 +176,8 @@ claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
 {
   "mcpServers": {
     "wadachi": {
-      "command": "python",
-      "args": ["/absolute/path/to/wadachi/wadachi/server.py"]
+      "command": "wadachi",
+      "args": []
     }
   }
 }
@@ -178,8 +188,8 @@ claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
 {
   "mcpServers": {
     "wadachi": {
-      "command": "python",
-      "args": ["/absolute/path/to/wadachi/wadachi/server.py"]
+      "command": "wadachi",
+      "args": []
     }
   }
 }
@@ -187,7 +197,7 @@ claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
 
 </details>
 
-### 3 · Register a project
+### Register a project
 
 In your first Claude session with Wadachi connected:
 
@@ -196,7 +206,7 @@ Register my project "feynotes" with description "Lecture audio to interactive we
 and path "/Volumes/ExtremeSSD/University/Lecture_From_Audio/"
 ```
 
-### 4 · Use it
+### Use it
 
 From now on, every session can start with `get_context` and your AI already knows what's going on. As you work, important discoveries get stored automatically. Over time, the brain compounds — each session is smarter than the last.
 
@@ -305,6 +315,21 @@ All data lives locally in `~/.wadachi` (configurable via `BRAIN_DIR` env var; a 
 ```
 
 Memories are plain markdown files with YAML frontmatter — readable and editable by hand.
+
+---
+
+## Upgrading
+
+**Your memories always survive an upgrade.** The database schema is versioned:
+on first start after an update, wadachi applies any pending migrations — and
+**backs up your `brain.db` automatically** (to `<brain>/backups/`) before
+touching anything. Existing brains from older versions (including the Engram
+era, `~/.engram`) are adopted in place: nothing to export, nothing to lose.
+
+```bash
+pipx upgrade wadachi        # or: uv tool upgrade wadachi
+# restart Claude Code — migrations (if any) run on first start, after a backup
+```
 
 ---
 

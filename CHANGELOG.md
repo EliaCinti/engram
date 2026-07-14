@@ -3,6 +3,21 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.4.0] — 2026-07-14
+
+### Added — Fase 2 roadmap: distribuzione
+- **CLI `wadachi init`** — setup guidato in un comando: crea la brain dir
+  (default `~/.wadachi`, rispetta un `~/.engram` legacy), porta il DB all'ultima
+  versione dello schema (con backup automatico se esisteva già), registra il
+  server MCP in Claude Code (`claude mcp add`) e scrive la config Antigravity.
+  Idempotente. `wadachi` senza argomenti resta il server MCP (compatibilità
+  con le config esistenti). `wadachi --version`.
+- **Packaging da prodotto**: metadata pyproject completi (authors, classifiers,
+  Homepage → wadachi.eliacinti.dev), installabile via `pipx install wadachi` /
+  `uv tool install wadachi`; le migrazioni viaggiano dentro il wheel.
+- **README**: quickstart in 3 comandi, badge PyPI, sezione *Upgrading* (le
+  memorie sopravvivono sempre: migrazioni versionate + backup automatico).
+
 ## [0.3.0] — 2026-07-14
 
 ### Added — Fase 1 roadmap: fondamenta

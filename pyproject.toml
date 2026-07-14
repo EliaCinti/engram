@@ -1,7 +1,18 @@
 [project]
 name = "wadachi"
-version = "0.3.0"
+version = "0.4.0"
 description = "Wadachi (轍) — persistent memory + semantic search MCP server for AI agents. Formerly Engram."
+authors = [{ name = "Elia Cinti", email = "cintielia21@gmail.com" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
@@ -23,12 +34,14 @@ dev = [
 ]
 
 [project.scripts]
-wadachi = "wadachi.server:mcp.run"
+wadachi = "wadachi.cli:main"
 # alias legacy: le config MCP esistenti che puntano a venv/bin/engram continuano a funzionare
-engram = "wadachi.server:mcp.run"
+engram = "wadachi.cli:main"
 
 [project.urls]
+Homepage = "https://wadachi.eliacinti.dev"
 Repository = "https://github.com/EliaCinti/wadachi"
+Changelog = "https://github.com/EliaCinti/wadachi/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["setuptools>=68.0"]
