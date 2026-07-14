@@ -20,22 +20,25 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
-from engram.store import MemoryStore
-from engram.search import SearchEngine
-from engram.graph import MemoryGraph
-from engram.entities import EntityGraph
-from engram.beliefs import BeliefReviewer
-from engram.reflect import Reflector
-from engram.procedural import ProceduralReviewer
+from wadachi.store import MemoryStore
+from wadachi.search import SearchEngine
+from wadachi.graph import MemoryGraph
+from wadachi.entities import EntityGraph
+from wadachi.beliefs import BeliefReviewer
+from wadachi.reflect import Reflector
+from wadachi.procedural import ProceduralReviewer
 
 # ── Init ──────────────────────────────────────────────────────
 
-brain_dir = os.environ.get("BRAIN_DIR", os.path.expanduser("~/.engram"))
+# default: ~/.wadachi, ma se esiste un brain legacy in ~/.engram continua a usarlo
+_legacy_brain = os.path.expanduser("~/.engram")
+_default_brain = _legacy_brain if os.path.isdir(_legacy_brain) else os.path.expanduser("~/.wadachi")
+brain_dir = os.environ.get("BRAIN_DIR", _default_brain)
 store = MemoryStore(brain_dir)
 search_engine = SearchEngine(store)
 
 mcp = FastMCP(
-    "engram",
+    "wadachi",
     instructions="""You have access to a persistent Brain — a knowledge base that survives across sessions.
 
 ## How to use the Brain effectively:

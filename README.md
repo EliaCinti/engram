@@ -3,14 +3,16 @@
 ```
 ┌─────────────────────────────────────────────┐
 │                                             │
-│              ◉  E N G R A M  ◉              │
+│           轍  w a d a c h i  轍             │
 │                                             │
-│    Persistent memory for AI workflows       │
+│      Your sessions leave tracks.            │
+│      Future sessions follow them.           │
 │                                             │
 └─────────────────────────────────────────────┘
 ```
 
-**Your AI forgets everything between sessions. Engram fixes that.**
+**Your AI forgets everything between sessions. Wadachi fixes that.**\
+*Wadachi (轍): the tracks wheels leave in a road — formerly known as Engram.*
 
 Persistent memory + semantic search as an MCP server.\
 Works with Claude Code, Claude Desktop, Cursor, and any MCP-compatible editor.
@@ -18,9 +20,9 @@ Works with Claude Code, Claude Desktop, Cursor, and any MCP-compatible editor.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![MCP](https://img.shields.io/badge/protocol-MCP-e64a19?style=flat-square)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Live demo](https://img.shields.io/badge/demo-engram.eliacinti.dev-8b5cf6?style=flat-square)](https://engram.eliacinti.dev)
+[![Live demo](https://img.shields.io/badge/demo-wadachi.eliacinti.dev-D9442B?style=flat-square)](https://wadachi.eliacinti.dev)
 
-**[Live graph demo →](https://engram.eliacinti.dev)** &nbsp;·&nbsp; *(coming soon — explore a real brain as an interactive constellation)*
+**[Live graph demo →](https://wadachi.eliacinti.dev)** &nbsp;·&nbsp; *(coming soon — explore a real brain as an interactive constellation)*
 
 </div>
 
@@ -37,7 +39,7 @@ You end up repeating yourself:
 
 ## The Solution
 
-Engram gives your AI a **persistent brain** — a local knowledge base where it stores insights, decisions, and patterns, then retrieves them instantly at the start of every session.
+Wadachi gives your AI a **persistent brain** — a local knowledge base where it stores insights, decisions, and patterns, then retrieves them instantly at the start of every session.
 
 One tool call at session start. All relevant context loaded. Zero wasted tokens re-discovering.
 
@@ -49,13 +51,13 @@ One tool call at session start. All relevant context loaded. Zero wasted tokens 
 
 **Semantic Search** — Finds memories by meaning, not just keywords. Ask for "linearizzazione sistemi" and it finds your notes on equilibrium points, even if the word "linearizzazione" never appears in them. Powered by local embeddings via [fastembed](https://github.com/qdrant/fastembed) — no API calls, no costs, runs on your machine.
 
-**Project Profiles** — Register your projects with their filesystem paths. Engram auto-detects which project you're in and scopes memories accordingly. Your FeyNotes memories stay separate from your LaPlacebo memories.
+**Project Profiles** — Register your projects with their filesystem paths. Wadachi auto-detects which project you're in and scopes memories accordingly. Your FeyNotes memories stay separate from your LaPlacebo memories.
 
 **Auto-Context** — `get_context` is the killer tool: one call at session start that detects the project, gathers relevant memories, loads recent decisions, and returns everything your AI needs to hit the ground running.
 
 **Decision Log** — Not just *what* you know, but *what you decided and why*. When a future session faces the same choice, it sees the rationale and the rejected alternatives — no more re-debating solved problems.
 
-**Constellation — Graph-Aware Recall** — Plain `recall` is pure cosine top-k, so a memory that's strongly *connected* to your query but not textually similar never surfaces. Engram builds a weighted graph over your brain from **citation** edges (`"memoria #82"`, `"aggiorna #77"` parsed from the prose), **semantic** k-NN edges, and **shared-entity** edges, then runs HippoRAG-style spreading activation (Personalized PageRank). `recall_associative` pulls up neighbours of your best hits even when their raw similarity is low — and returns the plain-cosine baseline alongside, so you can compare.
+**Constellation — Graph-Aware Recall** — Plain `recall` is pure cosine top-k, so a memory that's strongly *connected* to your query but not textually similar never surfaces. Wadachi builds a weighted graph over your brain from **citation** edges (`"memoria #82"`, `"aggiorna #77"` parsed from the prose), **semantic** k-NN edges, and **shared-entity** edges, then runs HippoRAG-style spreading activation (Personalized PageRank). `recall_associative` pulls up neighbours of your best hits even when their raw similarity is low — and returns the plain-cosine baseline alongside, so you can compare.
 
 **Entity Knowledge Graph (Graphify)** — Extracts the entities inside your notes (`convert.py`, `Di Gennaro`, `Opus 4.8`) and the relations between them, linking memories that mention the same thing even when neither cites the other. Extraction runs through the **local `claude` CLI** — it uses your Claude plan, not metered API, so it costs **$0** — and degrades gracefully when not installed.
 
@@ -77,7 +79,7 @@ graph TB
         CU[Cursor]
     end
 
-    subgraph Server ["Engram MCP Server — FastMCP · 25 tools"]
+    subgraph Server ["Wadachi MCP Server — FastMCP · 25 tools"]
         S[server.py<br><i>tool surface</i>]
         ST[store.py<br><i>SQLite + markdown, versioned</i>]
         SE[search.py<br><i>semantic + keyword</i>]
@@ -89,7 +91,7 @@ graph TB
         WE[web.py<br><i>graph visualizer</i>]
     end
 
-    subgraph Storage ["~/.engram (BRAIN_DIR)"]
+    subgraph Storage ["~/.wadachi (BRAIN_DIR)"]
         DB[(brain.db<br><i>metadata · embeddings · beliefs</i>)]
         GL[global/<br><i>cross-project memories</i>]
         PJ[projects/.../<br><i>scoped memories</i>]
@@ -124,8 +126,8 @@ graph TB
 ### 1 · Install
 
 ```bash
-git clone https://github.com/eliacinti/engram.git
-cd engram
+git clone https://github.com/eliacinti/wadachi.git
+cd wadachi
 
 # Base install (keyword search only)
 pip install -e .
@@ -137,7 +139,7 @@ pip install -e ".[semantic]"
 ### 2 · Connect to Claude Code
 
 ```bash
-claude mcp add engram -- python /absolute/path/to/engram/engram/server.py
+claude mcp add wadachi -- python /absolute/path/to/wadachi/wadachi/server.py
 ```
 
 <details>
@@ -147,11 +149,11 @@ claude mcp add engram -- python /absolute/path/to/engram/engram/server.py
 ```json
 {
   "mcpServers": {
-    "engram": {
+    "wadachi": {
       "command": "python",
-      "args": ["/absolute/path/to/engram/engram/server.py"],
+      "args": ["/absolute/path/to/wadachi/wadachi/server.py"],
       "env": {
-        "BRAIN_DIR": "/Users/you/.engram"
+        "BRAIN_DIR": "/Users/you/.wadachi"
       }
     }
   }
@@ -162,9 +164,9 @@ claude mcp add engram -- python /absolute/path/to/engram/engram/server.py
 ```json
 {
   "mcpServers": {
-    "engram": {
+    "wadachi": {
       "command": "python",
-      "args": ["/absolute/path/to/engram/engram/server.py"]
+      "args": ["/absolute/path/to/wadachi/wadachi/server.py"]
     }
   }
 }
@@ -174,9 +176,9 @@ claude mcp add engram -- python /absolute/path/to/engram/engram/server.py
 ```json
 {
   "mcpServers": {
-    "engram": {
+    "wadachi": {
       "command": "python",
-      "args": ["/absolute/path/to/engram/engram/server.py"]
+      "args": ["/absolute/path/to/wadachi/wadachi/server.py"]
     }
   }
 }
@@ -186,7 +188,7 @@ claude mcp add engram -- python /absolute/path/to/engram/engram/server.py
 
 ### 3 · Register a project
 
-In your first Claude session with Engram connected:
+In your first Claude session with Wadachi connected:
 
 ```
 Register my project "feynotes" with description "Lecture audio to interactive web pages"
@@ -201,7 +203,7 @@ From now on, every session can start with `get_context` and your AI already know
 
 ## Tools
 
-Engram exposes **25 MCP tools**, grouped by area.
+Wadachi exposes **25 MCP tools**, grouped by area.
 
 **Memory**
 
@@ -284,10 +286,10 @@ Engram exposes **25 MCP tools**, grouped by area.
 
 ## Storage
 
-All data lives locally in `~/.engram` (configurable via `BRAIN_DIR` env var):
+All data lives locally in `~/.wadachi` (configurable via `BRAIN_DIR` env var; a legacy `~/.engram` dir keeps working):
 
 ```
-~/.engram/
+~/.wadachi/
 ├── brain.db                    # SQLite: metadata + cached embeddings
 ├── global/                     # Cross-project knowledge
 │   ├── python-venv-tips.md
@@ -307,7 +309,7 @@ Memories are plain markdown files with YAML frontmatter — readable and editabl
 
 ## Search Modes
 
-Engram ships with two search backends:
+Wadachi ships with two search backends:
 
 | Mode | Install | How it works | Speed |
 |:-----|:--------|:-------------|:------|
@@ -326,7 +328,7 @@ Semantic search runs entirely on your machine — no API calls, no cloud, no cos
 - [x] **Reflection & insights** — cross-memory analogies proposed for accept/reject
 - [x] **Procedural memory** — recurring-incident clustering into candidate rules
 - [x] **Non-destructive memory history** — every update preserves prior versions
-- [x] **Web graph visualizer** — interactive constellation view *(live demo coming to [engram.eliacinti.dev](https://engram.eliacinti.dev))*
+- [x] **Web graph visualizer** — interactive constellation view *(live demo coming to [wadachi.eliacinti.dev](https://wadachi.eliacinti.dev))*
 
 ## Roadmap
 
@@ -341,7 +343,7 @@ Semantic search runs entirely on your machine — no API calls, no cloud, no cos
 
 ## Acknowledgments
 
-Inspired by [mstrehse/mcp-brain](https://github.com/mstrehse/mcp-brain) — a Go-based MCP memory server that sparked the idea. Engram is a ground-up rewrite in Python with semantic search, project awareness, and auto-context injection.
+Inspired by [mstrehse/mcp-brain](https://github.com/mstrehse/mcp-brain) — a Go-based MCP memory server that sparked the idea. Wadachi is a ground-up rewrite in Python with semantic search, project awareness, and auto-context injection.
 
 ## License
 

@@ -1,6 +1,6 @@
-# Engram — Session Rules
+# Wadachi — Session Rules
 
-You have access to **Engram**, a persistent memory system via MCP. Use it.
+You have access to **Wadachi**, a persistent memory system via MCP. Use it.
 
 ## Session Start (MANDATORY)
 1. Call `get_context` with the current working directory and a brief task description.

@@ -1,11 +1,11 @@
 """
-Engram Web — local brain graph visualization.
+Wadachi Web — local brain graph visualization.
 
 Usage:
-    python -m engram.web              # opens http://localhost:8420
-    python -m engram.web --port 9000  # custom port
+    python -m wadachi.web              # opens http://localhost:8420
+    python -m wadachi.web --port 9000  # custom port
 
-Reads live from ~/.engram/brain.db (or BRAIN_DIR).
+Reads live from the brain dir (BRAIN_DIR, default ~/.wadachi — legacy ~/.engram still works).
 No extra dependencies — uses Python's built-in http.server.
 """
 
@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engram.store import MemoryStore
+from wadachi.store import MemoryStore
 
 
 def get_graph_data(store: MemoryStore) -> dict:

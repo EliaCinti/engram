@@ -1,11 +1,11 @@
 [project]
-name = "engram"
-version = "0.1.0"
-description = "Persistent memory + semantic search MCP server for Claude Code & Desktop"
+name = "wadachi"
+version = "0.2.0"
+description = "Wadachi (轍) — persistent memory + semantic search MCP server for AI agents. Formerly Engram."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
-keywords = ["mcp", "memory", "ai", "claude", "semantic-search"]
+keywords = ["mcp", "memory", "ai", "claude", "semantic-search", "wadachi"]
 dependencies = [
     "mcp[cli]>=1.0.0",
     "numpy>=1.26.0",
@@ -20,14 +20,16 @@ graph = [
 ]
 
 [project.scripts]
-engram = "engram.server:mcp.run"
+wadachi = "wadachi.server:mcp.run"
+# alias legacy: le config MCP esistenti che puntano a venv/bin/engram continuano a funzionare
+engram = "wadachi.server:mcp.run"
 
 [project.urls]
-Repository = "https://github.com/eliacinti/engram"
+Repository = "https://github.com/EliaCinti/wadachi"
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["engram*"]
+include = ["wadachi*"]

@@ -1,3 +1,9 @@
+> **NOTA rename (13 Lug 2026):** il progetto si chiama ora **wadachi** (ex Engram).
+> Il server MCP si registra come `wadachi`, il package Python è `wadachi`
+> (`from wadachi.store import ...`), l'entry point è `venv/bin/wadachi`
+> (con alias legacy `venv/bin/engram`). I **path su disco restano invariati**:
+> repo in `/Volumes/ExtremeSSD/engram/`, brain in `/Volumes/ExtremeSSD/engram-brain/`.
+
 # Engram multi-device — usare lo stesso "cervello" su più Mac
 
 > Obiettivo: un **unico brain** condiviso tra Mac Mini e MacBook Air (ed eventuali

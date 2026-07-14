@@ -22,7 +22,7 @@ _INCIDENT_WORDS = ("bug", "drift", "duplicat", "ricorrente", "anti-", "overwrite
 # Tags that name a topic/area/project, not a recurring *failure theme* — they'd
 # cluster unrelated incidents that merely share a subject, so exclude them.
 _GENERIC = {"fix", "bugfix", "config", "pipeline", "workflow", "latex", "katex",
-            "feynotes", "cem", "studycoach", "geometria-solver", "engram",
+            "feynotes", "cem", "studycoach", "geometria-solver", "engram", "wadachi",
             "fisica1", "geometria", "algebra", "fdc", "gip"}
 
 

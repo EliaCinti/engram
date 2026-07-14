@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from engram.search import embed_text, embed_texts, cosine_similarity
+from wadachi.search import embed_text, embed_texts, cosine_similarity
 
 # Reference like "memoria #82", "memorie 77", "memory #5" → memory id.
 # Deliberately word-anchored (requires "memor..."): high precision, avoids

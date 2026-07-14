@@ -33,7 +33,10 @@ def _slugify(text: str) -> str:
 
 class MemoryStore:
     def __init__(self, brain_dir: Optional[str] = None):
-        self.brain_dir = Path(brain_dir or os.environ.get("BRAIN_DIR", os.path.expanduser("~/.engram")))
+        # default: ~/.wadachi, ma un brain legacy in ~/.engram continua a funzionare
+        _legacy = os.path.expanduser("~/.engram")
+        _default = _legacy if os.path.isdir(_legacy) else os.path.expanduser("~/.wadachi")
+        self.brain_dir = Path(brain_dir or os.environ.get("BRAIN_DIR", _default))
         self.brain_dir.mkdir(parents=True, exist_ok=True)
         (self.brain_dir / "global").mkdir(exist_ok=True)
         (self.brain_dir / "projects").mkdir(exist_ok=True)

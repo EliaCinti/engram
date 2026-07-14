@@ -15,8 +15,8 @@ via accept_insight / reject_insight. Pairs that already cite each other are drop
 
 from __future__ import annotations
 
-from engram.entities import EntityGraph
-from engram.graph import MemoryGraph
+from wadachi.entities import EntityGraph
+from wadachi.graph import MemoryGraph
 
 
 class Reflector:

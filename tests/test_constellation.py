@@ -11,8 +11,8 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engram.store import MemoryStore          # noqa: E402
-from engram.graph import MemoryGraph          # noqa: E402
+from wadachi.store import MemoryStore          # noqa: E402
+from wadachi.graph import MemoryGraph          # noqa: E402
 
 PASS = FAIL = 0
 
@@ -79,7 +79,7 @@ def main() -> int:
        any(e.kind == "entity" and {e.src, e.dst} == {1, 3} for e in g.edges))
 
     # ── belief revision ──
-    from engram.beliefs import BeliefReviewer
+    from wadachi.beliefs import BeliefReviewer
     ok("belief defaults (active, 0.7)",
        s.get_belief(1)["status"] == "active" and s.get_belief(1)["confidence"] == 0.7)
     s.set_belief(2, status="stale", review_reason="test")
@@ -89,7 +89,7 @@ def main() -> int:
     ok("scanner flags #1 superseded by #2", bool(sup) and sup[0]["superseded_by"] == 2)
 
     # ── reflection: insights store + smoke ──
-    from engram.reflect import Reflector
+    from wadachi.reflect import Reflector
     ins = s.store_insight("claim X", "surprising_connection", [1, 3])
     ok("insight stored as proposed", any(i["id"] == ins["id"] for i in s.list_insights("proposed")))
     s.set_insight_status(ins["id"], "accepted")
@@ -97,7 +97,7 @@ def main() -> int:
     ok("reflect() returns a list", isinstance(Reflector(s).candidates(), list))
 
     # ── procedural: recurring-incident clustering ──
-    from engram.procedural import ProceduralReviewer
+    from wadachi.procedural import ProceduralReviewer
     s.store_memory("Duplicato lezione 38 creato per errore.", "Dup lez38", tags=["duplicato"], category="bugfix")
     s.store_memory("Duplicato lezione 28 creato di nuovo.", "Dup lez28", tags=["duplicato"], category="bugfix")
     rules = ProceduralReviewer(s).review()
