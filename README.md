@@ -19,6 +19,7 @@ Works with Claude Code, Claude Desktop, Cursor, and any MCP-compatible editor.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![MCP](https://img.shields.io/badge/protocol-MCP-e64a19?style=flat-square)](https://modelcontextprotocol.io)
+[![CI](https://img.shields.io/github/actions/workflow/status/EliaCinti/wadachi/ci.yml?style=flat-square&label=CI&labelColor=18181B)](https://github.com/EliaCinti/wadachi/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-wadachi.eliacinti.dev-D9442B?style=flat-square)](https://wadachi.eliacinti.dev)
 

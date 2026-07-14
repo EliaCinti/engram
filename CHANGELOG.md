@@ -3,6 +3,26 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.3.0] — 2026-07-14
+
+### Added — Fase 1 roadmap: fondamenta
+- **Migrazioni DB versionate** (`wadachi/migrations/`): tabella `schema_version`,
+  runner all'avvio che applica gli script `000N_*.py` in ordine, ognuno nella sua
+  transazione (BEGIN/COMMIT espliciti, rollback su errore). **Backup automatico**
+  del `.db` in `backups/` prima di ogni migrazione su un DB non vuoto. I DB
+  pre-esistenti vengono adottati dal baseline idempotente senza toccare i dati.
+- **Suite pytest**: 51 test su migrazioni, store e tutti i 25 tool MCP — DB vuoto,
+  DB corrotto, ID inesistenti, titoli duplicati/malformati, versioning, beliefs,
+  insights, progetti. Hermetic (BRAIN_DIR temporanei), gira anche senza fastembed.
+- **CI GitHub Actions**: test a ogni push/PR, matrice Python 3.11–3.14.
+
+### Fixed
+- `recall_associative` senza fastembed non crasha più il tool MCP: restituisce un
+  errore chiaro + i risultati del fallback keyword (bug trovato dalla nuova suite).
+- Il rollback delle migrazioni è garantito anche per le DDL (il modulo sqlite3 di
+  Python committa implicitamente fuori transazione: ora BEGIN/COMMIT sono espliciti
+  e `executescript` è vietato negli script di migrazione).
+
 ## [0.2.0] — 2026-07-14
 
 ### Changed — Rebrand: Engram → wadachi 轍 (Fase 0 roadmap)
