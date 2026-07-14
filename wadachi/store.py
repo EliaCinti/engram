@@ -86,17 +86,16 @@ class MemoryStore:
             filepath = proj_dir / f"{slug}-{counter}.md"
             counter += 1
 
-        # Write markdown with frontmatter
-        frontmatter = (
-            f"---\n"
-            f"title: {title}\n"
-            f"project: {project}\n"
-            f"tags: {json.dumps(tags)}\n"
-            f"category: {category}\n"
-            f"created: {now}\n"
-            f"---\n\n"
+        # Write markdown with canonical (OKF-conformant) frontmatter
+        from wadachi.mdio import render_memory_file
+        filepath.write_text(
+            render_memory_file(
+                {"title": title, "project": project, "tags": tags,
+                 "category": category, "created": now},
+                content,
+            ),
+            encoding="utf-8",
         )
-        filepath.write_text(frontmatter + content, encoding="utf-8")
 
         # Insert metadata
         rel_path = str(filepath.relative_to(self.brain_dir))
@@ -107,6 +106,9 @@ class MemoryStore:
                 (title, slug, project, json.dumps(tags), category, rel_path, now, now),
             )
             memory_id = cursor.lastrowid
+
+        self.rebuild_index()
+        self.append_log("store", f"[[{filepath.stem}]] #{memory_id} · {title[:80]}")
 
         return {
             "id": memory_id,
@@ -183,6 +185,8 @@ class MemoryStore:
             if filepath.exists():
                 filepath.unlink()
             conn.execute("DELETE FROM memories WHERE id = ?", (memory_id,))
+        self.rebuild_index()
+        self.append_log("delete", f"#{memory_id} ({row['filepath']})")
         return True
 
     def update_memory(self, memory_id: int, content: str | None = None, tags: list[str] | None = None) -> bool:
@@ -202,17 +206,17 @@ class MemoryStore:
                         "INSERT INTO memory_versions (memory_id, content, replaced_at) VALUES (?, ?, ?)",
                         (memory_id, filepath.read_text(encoding="utf-8"), now),
                     )
-                frontmatter = (
-                    f"---\n"
-                    f"title: {row['title']}\n"
-                    f"project: {row['project']}\n"
-                    f"tags: {json.dumps(tags or json.loads(row['tags']))}\n"
-                    f"category: {row['category']}\n"
-                    f"created: {row['created_at']}\n"
-                    f"updated: {now}\n"
-                    f"---\n\n"
+                from wadachi.mdio import render_memory_file
+                filepath.write_text(
+                    render_memory_file(
+                        {"title": row["title"], "project": row["project"],
+                         "tags": tags or json.loads(row["tags"]),
+                         "category": row["category"],
+                         "created": row["created_at"], "updated": now},
+                        content,
+                    ),
+                    encoding="utf-8",
                 )
-                filepath.write_text(frontmatter + content, encoding="utf-8")
 
             updates = ["updated_at = ?"]
             params: list = [now]
@@ -456,6 +460,7 @@ class MemoryStore:
                 "tags": json.loads(r["tags"]),
                 "category": r["category"],
                 "content": content,
+                "filepath": r["filepath"],
                 "has_embedding": r["embedding"] is not None,
                 "embedding": r["embedding"],
                 "created_at": r["created_at"],
@@ -501,6 +506,41 @@ class MemoryStore:
                 "UPDATE memories SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
                 [(now, mid) for mid in memory_ids],
             )
+
+    # ── LLM Wiki: index.md + log.md (nomi riservati OKF, alla radice del brain) ──
+
+    def rebuild_index(self) -> None:
+        """Rigenera index.md: il catalogo del wiki, una riga per memoria.
+
+        Best-effort: un problema qui non deve mai bloccare l'operazione primaria.
+        """
+        try:
+            with self._conn() as conn:
+                rows = conn.execute(
+                    "SELECT title, project, category, filepath FROM memories "
+                    "ORDER BY project, updated_at DESC"
+                ).fetchall()
+            lines = ["---", "type: index", "---", "", "# Brain index", ""]
+            current = None
+            for r in rows:
+                if r["project"] != current:
+                    current = r["project"]
+                    lines += [f"## {current}", ""]
+                stem = Path(r["filepath"]).stem
+                lines.append(f"- [[{stem}]] — {r['title']} `{r['category']}`")
+            lines.append("")
+            (self.brain_dir / "index.md").write_text("\n".join(lines), encoding="utf-8")
+        except OSError:
+            pass
+
+    def append_log(self, op: str, detail: str) -> None:
+        """log.md append-only: la cronologia delle operazioni (grep-abile)."""
+        try:
+            ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            with open(self.brain_dir / "log.md", "a", encoding="utf-8") as f:
+                f.write(f"## [{ts}] {op} — {detail}\n")
+        except OSError:
+            pass
 
     # ── Helpers ────────────────────────────────────────────────
 

@@ -102,6 +102,8 @@ mcp = FastMCP(
 - `note`: General notes
 
 ## Golden rule: If you spent time figuring something out, store it. The 30 seconds to store a memory saves 5 minutes next session.
+
+## Linking (LLM Wiki): when a memory relates to another, LINK it in the content — `[[#42]]` by id or `[[file-slug]]` Obsidian-style. Links become graph edges: associative recall, provenance and consolidation all travel on them. The brain dir is a valid Obsidian vault and an OKF bundle.
 """,
 )
 

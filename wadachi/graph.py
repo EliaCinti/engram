@@ -38,6 +38,11 @@ from wadachi.search import embed_text, embed_texts, cosine_similarity
 # Deliberately word-anchored (requires "memor..."): high precision, avoids
 # matching bare "#1" that appears inside quoted external text.
 _MEM_REF = re.compile(r"(?i)\bmemor(?:i[ae]|y|ies)\b[^\w#]{0,12}#?\s*(\d{1,4})")
+# [[#84]] — riferimento diretto per id (usato da merge_memories/accept_insight)
+_ID_REF = re.compile(r"\[\[#(\d{1,5})\]\]")
+# [[slug-del-file]] o [[slug|testo mostrato]] — wikilink in stile Obsidian,
+# risolto sullo stem del file della memoria (il vault è apribile in Obsidian)
+_WIKI_REF = re.compile(r"\[\[([^\]#|][^\]|]{0,120}?)(?:\|[^\]]*)?\]\]")
 
 _EDGE_WEIGHT = {"updates": 1.5, "contradicts": 1.2, "cites": 1.0, "relates": 0.8}
 
@@ -66,6 +71,7 @@ class Node:
     tags: list[str]
     content: str
     emb: np.ndarray | None = None
+    stem: str = ""                    # nome file senza .md → target dei [[wikilink]]
 
 
 @dataclass
@@ -98,7 +104,9 @@ class MemoryGraph:
             emb = None
             if r["embedding"] is not None:
                 emb = np.frombuffer(r["embedding"], dtype=np.float32)
-            node = Node(r["id"], r["title"], r["category"], r["tags"], r["content"], emb)
+            from pathlib import Path as _P
+            node = Node(r["id"], r["title"], r["category"], r["tags"], r["content"], emb,
+                        stem=_P(r.get("filepath", "")).stem)
             self.nodes[r["id"]] = node
             if emb is None:
                 missing_ids.append(r["id"])
@@ -121,13 +129,31 @@ class MemoryGraph:
 
     def _build_citation_edges(self) -> None:
         ids = set(self.nodes)
+        by_stem = {n.stem.lower(): n.id for n in self.nodes.values() if n.stem}
+        seen: set[tuple[int, int, str]] = set()
+
+        def add(src: int, dst: int, pos: int, content: str) -> None:
+            if dst == src or dst not in ids:
+                return
+            rel = _edge_type(content[max(0, pos - 40):pos])
+            key = (src, dst, rel)
+            if key in seen:
+                return
+            seen.add(key)
+            self.edges.append(Edge(src, dst, "citation", rel, _EDGE_WEIGHT[rel]))
+
         for src, node in self.nodes.items():
+            # "memoria #82" (prosa storica)
             for m in _MEM_REF.finditer(node.content):
-                dst = int(m.group(1))
-                if dst == src or dst not in ids:
-                    continue
-                rel = _edge_type(node.content[max(0, m.start() - 40):m.start()])
-                self.edges.append(Edge(src, dst, "citation", rel, _EDGE_WEIGHT[rel]))
+                add(src, int(m.group(1)), m.start(), node.content)
+            # [[#82]] (provenienza di merge/insight)
+            for m in _ID_REF.finditer(node.content):
+                add(src, int(m.group(1)), m.start(), node.content)
+            # [[slug]] Obsidian → risolto per stem del file
+            for m in _WIKI_REF.finditer(node.content):
+                dst = by_stem.get(m.group(1).strip().lower())
+                if dst is not None:
+                    add(src, dst, m.start(), node.content)
 
     def _build_semantic_edges(self) -> None:
         ids = [mid for mid in self._order if self.nodes[mid].emb is not None]

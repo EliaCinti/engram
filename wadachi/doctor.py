@@ -130,7 +130,8 @@ def run_doctor(brain_dir: str | Path, fix: bool = False, check_mcp: bool = True)
                 missing.append((mid, fp))
                 continue
             parsed = parse_memory_file(path.read_text(encoding="utf-8"))
-            if parsed.malformed or not parsed.had_frontmatter:
+            # "riparabile" = rotto, senza frontmatter, o non OKF-conforme (manca `type`)
+            if parsed.malformed or not parsed.had_frontmatter or "type" not in parsed.meta:
                 if fix:
                     db_meta = {"title": title, "project": project,
                                "tags": json.loads(tags or "[]"), "category": category,
@@ -148,12 +149,12 @@ def run_doctor(brain_dir: str | Path, fix: bool = False, check_mcp: bool = True)
             r.ok("tutti i file referenziati dal DB esistono")
 
         if fixed:
-            r.ok(f"{fixed} file con frontmatter assente/rotto riscritti dal DB (--fix)")
+            r.ok(f"{fixed} file riscritti nel formato canonico OKF (--fix)")
         elif malformed:
-            r.warn(f"{len(malformed)} file con frontmatter assente/malformato "
+            r.warn(f"{len(malformed)} file con frontmatter assente/malformato/non-OKF "
                    f"(riparabile con --fix): " + ", ".join(f"#{m}" for m, _ in malformed[:8]))
         else:
-            r.ok("frontmatter canonico in tutti i file")
+            r.ok("frontmatter canonico (OKF) in tutti i file")
 
         on_disk = {p.resolve() for d in (brain / "global", brain / "projects")
                    if d.is_dir() for p in d.rglob("*.md")}
@@ -166,6 +167,25 @@ def run_doctor(brain_dir: str | Path, fix: bool = False, check_mcp: bool = True)
 
     if conn is not None:
         conn.close()
+
+    # ── LLM Wiki: index + schema ──────────────────────────────
+    print("\nLLM Wiki")
+    if (brain / "SCHEMA.md").exists():
+        r.ok("SCHEMA.md presente")
+    elif fix:
+        from wadachi.cli import _SCHEMA_MD
+        (brain / "SCHEMA.md").write_text(_SCHEMA_MD, encoding="utf-8")
+        r.ok("SCHEMA.md mancante → creato (--fix)")
+    else:
+        r.warn("SCHEMA.md mancante (riparabile con --fix, o con `wadachi init`)")
+    if fix:
+        from wadachi.store import MemoryStore
+        MemoryStore(str(brain)).rebuild_index()
+        r.ok("index.md rigenerato (--fix)")
+    elif (brain / "index.md").exists():
+        r.ok("index.md presente")
+    else:
+        r.warn("index.md mancante (riparabile con --fix)")
 
     # ── ricerca semantica ─────────────────────────────────────
     print("\nRicerca")

@@ -14,8 +14,8 @@
 **Your AI forgets everything between sessions. Wadachi fixes that.**\
 *Wadachi (轍): the tracks wheels leave in a road — formerly known as Engram.*
 
-Persistent memory + semantic search as an MCP server.\
-Works with Claude Code, Claude Desktop, Cursor, and any MCP-compatible editor.
+**The MCP-native memory server for the LLM Wiki pattern.**\
+Persistent memory + semantic search for Claude Code, Claude Desktop, Cursor, and any MCP client.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![MCP](https://img.shields.io/badge/protocol-MCP-e64a19?style=flat-square)](https://modelcontextprotocol.io)
@@ -323,6 +323,18 @@ All data lives locally in `~/.wadachi` (configurable via `BRAIN_DIR` env var; a 
 ```
 
 Memories are plain markdown files with YAML frontmatter — readable and editable by hand.
+
+### LLM Wiki native · Obsidian vault · OKF bundle
+
+The brain follows [Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
+an agent-maintained markdown wiki with `[[wikilinks]]`, a generated `index.md`
+catalog, an append-only `log.md`, and a `SCHEMA.md` documenting the conventions
+(edit it — the schema file is yours). Every link becomes a graph edge that
+associative recall and consolidation travel on.
+
+- **Obsidian**: the brain dir *is* a vault — open it and get the graph view for free. Zero lock-in.
+- **OKF**: every file carries the [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog) `type` field — the brain is a conformant OKF bundle, portable to any OKF consumer.
+- `wadachi doctor --fix` upgrades pre-OKF brains in place (content never touched).
 
 ---
 

@@ -63,7 +63,7 @@ def test_doctor_fix_repairs_frontmatter(tmp_path, capsys):
     path.write_text("contenuto prezioso senza frontmatter")
 
     assert run_doctor(s.brain_dir, fix=True, check_mcp=False) == 0
-    assert "riscritti dal DB" in capsys.readouterr().out
+    assert "riscritti nel formato canonico OKF" in capsys.readouterr().out
     text = path.read_text()
     assert text.startswith("---")
     assert "contenuto prezioso" in text              # il contenuto non si tocca

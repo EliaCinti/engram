@@ -33,6 +33,52 @@ def _wadachi_bin() -> str:
     return shutil.which("wadachi") or sys.argv[0]
 
 
+_SCHEMA_MD = """---
+type: schema
+---
+
+# Brain schema — come è organizzato questo wiki
+
+Questo brain segue il pattern **LLM Wiki** (Karpathy) ed è un bundle
+**OKF-conforme** (Open Knowledge Format). È anche un vault Obsidian: aprilo
+con Obsidian e vedrai il grafo.
+
+## Layout
+
+    brain/
+    ├── SCHEMA.md      ← questo file: le convenzioni (modificalo pure, è tuo)
+    ├── index.md       ← catalogo generato: una riga per memoria (non editare)
+    ├── log.md         ← cronologia append-only delle operazioni
+    ├── brain.db       ← indice SQLite: metadata, embeddings, beliefs
+    ├── backups/       ← backup automatici pre-migrazione
+    ├── logs/          ← log tecnici del server
+    ├── global/        ← memorie cross-project (.md)
+    └── projects/<p>/  ← memorie per progetto (.md)
+
+## Formato dei file memoria
+
+Markdown con frontmatter YAML. `type` è l'unico campo richiesto (OKF);
+title/project/tags/category/created/updated sono le estensioni di wadachi.
+Il CONTENUTO è la fonte di verità e puoi editarlo a mano: il parser è
+tollerante e `wadachi doctor --fix` ripara il frontmatter dal DB.
+
+## Link tra memorie
+
+- `[[slug-del-file]]` — wikilink Obsidian (risolto sul nome file)
+- `[[#42]]` — riferimento diretto per id
+- `memoria #42` — prosa, riconosciuta anche questa
+
+Ogni link diventa un arco del grafo: recall associativo, provenienza delle
+decisioni e consolidamento ci camminano sopra. Linka generosamente.
+
+## Manutenzione
+
+- `wadachi doctor` diagnostica; `--fix` ripara frontmatter e rigenera l'indice
+- le memorie non si perdono mai: versioni su ogni update, belief per lo stale,
+  migrazioni con backup automatico
+"""
+
+
 def _ok(msg: str) -> None:
     print(f"  ✓ {msg}")
 
@@ -60,6 +106,17 @@ def cmd_init(args: argparse.Namespace) -> int:
         _ok(f"database pronto (migrazioni applicate: {applied})")
     else:
         _ok("database già all'ultima versione dello schema")
+
+    # 2b · LLM Wiki: SCHEMA.md (le convenzioni del brain) + index.md
+    schema_path = brain / "SCHEMA.md"
+    if not schema_path.exists():
+        schema_path.write_text(_SCHEMA_MD, encoding="utf-8")
+        _ok("SCHEMA.md creato (le convenzioni del wiki — leggilo, è tuo)")
+    else:
+        _skip("SCHEMA.md già presente (non lo tocco: è tuo)")
+    from wadachi.store import MemoryStore
+    MemoryStore(str(brain)).rebuild_index()
+    _ok("index.md rigenerato (catalogo del wiki)")
 
     # 3 · registrazione in Claude Code (se il CLI `claude` è disponibile)
     if args.no_claude:

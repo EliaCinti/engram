@@ -3,13 +3,33 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
-## [Unreleased]
+## [0.7.0] — 2026-07-14
 
-### Added — Fase 5 roadmap (parziale): community
-- `CONTRIBUTING.md` (filosofia, dev setup, regole per migrazioni/tool/logging).
-- Issue templates: bug report (chiede `wadachi doctor` + log), feature request,
-  **"Share your setup"** — il feedback loop privacy-first (5.19: zero telemetria,
-  il feedback volontario è l'unico canale). Template PR con checklist.
+### Added — Fase 7.A roadmap: LLM Wiki + OKF (il posizionamento)
+- **Pattern LLM Wiki (Karpathy)**: il brain è ora un wiki mantenuto dall'agente —
+  `index.md` (catalogo generato, una riga per memoria con wikilink), `log.md`
+  (cronologia append-only, grep-abile), `SCHEMA.md` (le convenzioni del brain,
+  create da `wadachi init`, editabili dall'utente: "the schema file is everything").
+- **Wikilink Obsidian**: `[[slug-del-file]]` (con alias `[[slug|testo]]`) e
+  `[[#id]]` diventano archi *citation* del grafo, insieme alla prosa storica
+  "memoria #42". Chiuso un gap latente: i link di provenienza scritti da
+  `merge_memories`/`accept_insight` non generavano archi. **Il brain dir è un
+  vault Obsidian valido**: grafo nativo gratis, zero lock-in.
+- **Conformità OKF** (Open Knowledge Format, Google): il frontmatter canonico
+  include `type` (l'unico campo richiesto dalla spec); il brain è un bundle OKF
+  conforme. `wadachi doctor --fix` porta i brain pre-OKF alla conformità in
+  place, senza mai toccare i contenuti.
+
+### Changed
+- Le scritture dei file memoria passano da `mdio.render_memory_file` (unica
+  fonte di verità del formato, prima erano f-string duplicate in store.py).
+
+### Added — Fase 5 (parziale): community
+- `CONTRIBUTING.md`, issue templates (bug report integrato con `wadachi doctor`
+  + log), **"Share your setup"** (feedback loop privacy-first), template PR.
+
+### Tests
+- 11 test nuovi (99 totali).
 
 ## [0.6.0] — 2026-07-14
 

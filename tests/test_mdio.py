@@ -64,7 +64,7 @@ def test_backfill_rewrites_only_when_needed(tmp_path):
     f.write_text("contenuto scritto a mano, senza frontmatter")
     assert backfill_file(f, db_meta) is True
     text = f.read_text()
-    assert text.startswith("---\ntitle: T")
+    assert text.startswith("---\ntype: memory\ntitle: T")
     assert "contenuto scritto a mano" in text
     # ora è canonico: secondo giro = nessuna riscrittura
     assert backfill_file(f, db_meta) is False

@@ -6,8 +6,10 @@ mano (è una feature): questo modulo li legge SENZA mai alzare eccezioni per
 un frontmatter assente, malformato o non chiuso, e sa riscriverli nel formato
 canonico corrente (backfill) usando i metadata del DB come riferimento.
 
-Formato canonico:
+Formato canonico (OKF-conforme: https://github.com/GoogleCloudPlatform/knowledge-catalog —
+l'unico campo richiesto dalla spec è `type`; gli altri sono estensioni tollerate):
     ---
+    type: memory
     title: <titolo>
     project: <progetto>
     tags: ["a", "b"]
@@ -16,7 +18,7 @@ Formato canonico:
     [updated: <iso>]
     ---
 
-    <contenuto>
+    <contenuto con [[wikilink]] in stile Obsidian>
 """
 
 import json
@@ -100,9 +102,10 @@ def parse_memory_file(text: str) -> ParsedMemory:
 
 
 def render_memory_file(meta: dict, content: str) -> str:
-    """Serializza nel formato canonico corrente."""
+    """Serializza nel formato canonico corrente (OKF: `type` sempre presente)."""
+    meta = {"type": "memory", **meta}
     lines = ["---"]
-    for key in ("title", "project", "tags", "category", "created", "updated"):
+    for key in ("type", "title", "project", "tags", "category", "created", "updated"):
         if key not in meta or meta[key] in (None, ""):
             continue
         value = meta[key]
