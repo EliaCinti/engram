@@ -95,3 +95,33 @@ def test_web_graph_data_typed(store):
            any(l["source"] == f"d{d['id']}" and l["target"] == f"m{m['id']}"
                for l in data["links"])          # decisione → memoria citata
     assert any(l["rel"] == "supersedes" for l in data["links"])
+
+
+# ── il brain propone (get_context + cache del sonno) ──────────
+
+
+def test_sleep_writes_cache(srv):
+    import wadachi.server as ws
+    j(srv.sleep())
+    cache = ws.store.brain_dir / "logs" / "sleep-cache.json"
+    assert cache.exists()
+    data = json.loads(cache.read_text())
+    assert "ts" in data and "merge" in data
+
+
+def test_get_context_surfaces_proposals(srv):
+    import wadachi.server as ws
+    ws.store.store_insight("A e B si somigliano", "analogy", [1, 2])
+    dense = srv.get_context()
+    assert "il brain propone" in dense
+    assert "insight" in dense
+    out = j(srv.get_context(format="json"))
+    assert any("insight" in p for p in out["proposals"])
+
+
+def test_proposals_mention_sleep_when_never_run(store, monkeypatch):
+    """Su un brain vergine la proposta è: fai girare il sonno."""
+    import wadachi.server as ws
+    monkeypatch.setattr(ws, "store", store)
+    props = ws._brain_proposals()
+    assert any("sonno" in p for p in props)

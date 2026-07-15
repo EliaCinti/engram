@@ -312,6 +312,46 @@ def _est_tokens(text: str) -> int:
     return len(text) // 4
 
 
+def _brain_proposals() -> list[str]:
+    """Le proposte del brain — la filosofia in azione: il software PROPONE
+    (spiegando cosa e perché), l'umano decide. Appare in ogni get_context.
+    Best-effort e a buon mercato: SQL + una cache scritta dal sonno.
+    """
+    props = []
+    try:
+        ins = store.list_insights(status="proposed")
+        if ins:
+            props.append(f"{len(ins)} insight proposti in attesa del tuo giudizio "
+                         "→ list_insights(), poi accept_insight/reject_insight")
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from datetime import datetime, timezone
+        from pathlib import Path as _Path
+        cache_p = _Path(store.brain_dir) / "logs" / "sleep-cache.json"
+        if cache_p.exists():
+            c = json.loads(cache_p.read_text())
+            age = (datetime.now(timezone.utc)
+                   - datetime.fromisoformat(c["ts"])).days
+            found = []
+            if c.get("merge"):
+                found.append(f"{c['merge']} gruppi di memorie ridondanti da fondere")
+            if c.get("decay"):
+                found.append(f"{c['decay']} memorie in decadimento da rivedere")
+            if found and age <= 14:
+                props.append(f"dal sonno di {age}g fa: " + " e ".join(found) +
+                             " → sleep() per il dettaglio (read-only)")
+            elif age > 7:
+                props.append(f"il sonno non gira da {age} giorni → sleep() "
+                             "o `wadachi sleep` (propone, non tocca nulla)")
+        else:
+            props.append("il sonno non è mai girato su questo brain → sleep() "
+                         "(report read-only: propone consolidamenti, decidi tu)")
+    except Exception:  # noqa: BLE001
+        pass
+    return props
+
+
 def _render_context_dense(context: dict, max_tokens: int) -> str:
     """Formato a livelli (Fase 4.12/4.14): righe compatte con puntatori #id.
 
@@ -341,9 +381,12 @@ def _render_context_dense(context: dict, max_tokens: int) -> str:
     rev_lines = [f"#{f['memory_id']} [{','.join(f.get('signals', []))}] {f.get('reason', '')[:75]}"
                  for f in context.get("needs_review", [])]
 
+    prop_lines = [f"💡 {p}" for p in context.get("proposals", [])]
+
     s = context["stats"]
-    footer = [f"stats: {s['memories']} mem · {s['decisions']} dec · {s['projects']} prog",
-              "→ contenuto completo: expand_memory(ids=[…])"]
+    footer = ((["## il brain propone"] + prop_lines) if prop_lines else []) + \
+        [f"stats: {s['memories']} mem · {s['decisions']} dec · {s['projects']} prog",
+         "→ contenuto completo: expand_memory(ids=[…])"]
 
     def assemble(n_mem, n_dec, n_rev):
         parts = list(head)
@@ -423,6 +466,9 @@ def get_context(
         context["needs_review"] = BeliefReviewer(store).scan(project=project, limit=5)
     except Exception:  # noqa: BLE001 — review is best-effort, never block context
         context["needs_review"] = []
+
+    # Le proposte del brain: il software propone, l'umano decide
+    context["proposals"] = _brain_proposals()
 
     # Stats
     context["stats"] = store.stats()
@@ -841,6 +887,22 @@ def sleep(project: str | None = None, min_similarity: float = 0.78) -> str:
     decay_candidates.sort(key=lambda x: -x["decay"])
 
     st = g.stats()
+
+    # cache del report: get_context la usa per PROPORRE all'utente a inizio
+    # sessione ("il brain propone: …") senza ricostruire il grafo ogni volta
+    try:
+        from datetime import datetime, timezone
+        from pathlib import Path as _Path
+        cache_dir = _Path(store.brain_dir) / "logs"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        (cache_dir / "sleep-cache.json").write_text(json.dumps({
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "merge": len(merge_candidates), "decay": len(decay_candidates),
+            "orphans": len(st["orphans"]),
+        }))
+    except OSError:
+        pass
+
     return json.dumps({
         "merge_candidates": merge_candidates[:8],
         "decay_candidates": decay_candidates[:12],

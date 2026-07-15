@@ -20,7 +20,7 @@
 "softwareVersion":"0.9.0","license":"https://opensource.org/license/mit"}
 </script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101012'/%3E%3Cpath d='M5 11.5C5 10.4 5.9 9.6 7 9.7L21 10.6C23.5 10.8 25.5 11.2 27 11.8C25.5 12.3 23.5 12.5 21 12.5L7 13.2C5.9 13.3 5 12.6 5 11.5Z' fill='%23E8E4DC'/%3E%3Cpath d='M5 19.5C5 18.4 5.9 17.6 7 17.7L19.5 18.6C22 18.8 24 19.2 25.5 19.8C24 20.3 22 20.5 19.5 20.5L7 21.2C5.9 21.3 5 20.6 5 19.5Z' fill='%23E8E4DC'/%3E%3Crect x='23' y='23' width='5' height='5' rx='1.4' fill='%23D9442B'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
@@ -73,7 +73,7 @@
           <a class="btn btn-ghost" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">GitHub ↗</a>
         </div>
         <div class="meta-row" aria-label="project links">
-          <a class="meta-pill" href="https://pypi.org/project/wadachi/" target="_blank" rel="noopener"><span class="seal">●</span> PyPI · v0.9.0</a>
+          <a class="meta-pill" href="https://pypi.org/project/wadachi/" target="_blank" rel="noopener"><span class="seal">●</span> PyPI · v0.10.0</a>
           <a class="meta-pill" href="https://github.com/EliaCinti/wadachi/actions/workflows/ci.yml" target="_blank" rel="noopener">CI · passing</a>
           <span class="meta-pill">MIT · local-first · no telemetry</span>
         </div>
@@ -102,35 +102,49 @@
   </div>
 </section>
 
-<!-- ── PROBLEM / SOLUTION ───────────────────────────────── -->
-<section class="section split" id="why">
-  <div class="split-col">
-    <div class="kicker red">The problem</div>
-    <h2>Every session starts from <span class="hl">zero</span>.</h2>
-    <p>
-      Open your editor on a project and the model knows nothing. It re-reads the
-      same files, re-discovers the same patterns, and you find yourself typing
-      the same reminders again and again:
-    </p>
-    <ul class="quote-list">
-      <li>“Remember, we use the observer pattern here…”</li>
-      <li>“The deploy script needs the <code>--feynotes</code> flag…”</li>
-      <li>“We already tried that — it doesn’t work because…”</li>
-    </ul>
+<!-- ── PROBLEM / SOLUTION — la scena (loop vs one-call) ───── -->
+<section class="section" id="why">
+  <div class="section-head">
+    <div class="kicker">The problem → the solution</div>
+    <h2>Stop re-explaining. Start <span class="hl">compounding</span>.</h2>
   </div>
-  <div class="split-col">
-    <div class="kicker green">The solution</div>
-    <h2>A brain that <span class="hl">survives</span> the session.</h2>
-    <p>
-      Wadachi gives your AI a <strong>persistent, local knowledge base</strong>.
-      It stores insights, decisions and patterns as you work, then retrieves the
-      relevant ones instantly at the start of the next session.
-    </p>
-    <p>
-      One call at session start — <code>get_context</code> — and everything your
-      AI needs is loaded. Zero wasted tokens re-discovering what it already knew.
-      Each session is smarter than the last.
-    </p>
+
+  <div class="scene">
+    <div class="scene-panel scene-problem">
+      <div class="scene-tag">every other session</div>
+      <h3>Starts from zero. Every time.</h3>
+      <p>The model re-reads the same files, re-discovers the same patterns —
+         and you type the same reminders, again:</p>
+      <div class="ghost-term" aria-hidden="true">
+        <div class="gt-line"><span class="gt-prompt">›</span> <span id="ghost-type"></span><span class="gt-caret"></span></div>
+        <div class="gt-count">explained again · ×<span id="ghost-count">14</span> this month</div>
+      </div>
+    </div>
+
+    <div class="scene-track" aria-hidden="true">
+      <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+        <g fill="#D9442B">
+          <path d="M 8 30 C 4 24, 8 18, 16 18 C 60 16, 110 20, 150 26 C 168 29, 184 32, 196 36 C 184 38, 168 39, 150 38 C 110 36, 58 36, 16 40 C 8 41, 4 35, 8 30 Z" opacity="0.9"/>
+          <path d="M 8 62 C 4 56, 8 50, 16 50 C 58 48, 106 52, 144 58 C 162 61, 178 64, 190 68 C 178 70, 162 71, 144 70 C 106 68, 56 68, 16 72 C 8 73, 4 67, 8 62 Z" opacity="0.55"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="scene-panel scene-solution">
+      <div class="scene-tag solution">with wadachi</div>
+      <h3>One call. Everything back.</h3>
+      <p><code>get_context</code> loads project, memories, decisions and what
+         needs review — <strong>~400 tokens</strong>, then it compounds:</p>
+      <div class="solid-term" aria-hidden="true">
+        <div class="st-line"><span class="st-prompt">›</span> get_context()</div>
+        <div class="st-out"># wadachi · project: acme · semantic</div>
+        <div class="st-out"><span class="st-id">#12</span> architecture ·0.81· CRDT merge strategy</div>
+        <div class="st-out"><span class="st-id">#31</span> config ·0.77· Redis pub/sub fan-out</div>
+        <div class="st-out"><span class="st-id">D3</span> decision · Yjs over Automerge</div>
+        <div class="st-out st-warn">⚠ 1 belief needs review · 💡 sleep proposes 2 merges</div>
+        <div class="st-note">loaded in one call — nothing re-explained</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -340,6 +354,6 @@ wadachi init
 </footer>
 
 <!-- sumi-style hero engine — pure vanilla JS, no external libs -->
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

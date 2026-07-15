@@ -164,6 +164,41 @@ def cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sleep(args: argparse.Namespace) -> int:
+    """Esegue il sonno e stampa il report umano. La cache scritta dal tool fa sì
+    che il prossimo get_context PROPONGA i risultati all'utente."""
+    if args.brain_dir:
+        os.environ["BRAIN_DIR"] = str(Path(args.brain_dir).expanduser())
+    import json as _json
+    import wadachi.server as srv          # import qui: carica il brain giusto
+
+    print(f"wadachi {__version__} — sonno 💤 (read-only)\n")
+    rep = _json.loads(srv.sleep())
+
+    if rep.get("merge_candidates"):
+        print(f"Gruppi di memorie ridondanti ({len(rep['merge_candidates'])}):")
+        for g in rep["merge_candidates"]:
+            print(f"  ◆ {' + '.join(str(i) for i in g['ids'])}")
+            for title in g["titles"][:4]:
+                print(f"      {title}")
+    else:
+        print("Nessun gruppo ridondante trovato. ✓")
+
+    if rep.get("decay_candidates"):
+        print(f"\nMemorie in decadimento (mai richiamate, senza link):")
+        for c in rep["decay_candidates"]:
+            print(f"  ▽ #{c['id']} (decay {c['decay']}) {c['title']}")
+    else:
+        print("Nessuna memoria in decadimento. ✓")
+
+    if rep.get("orphans"):
+        print(f"\nNodi senza collegamenti: {', '.join(rep['orphans'])}")
+
+    print("\nNulla è stato modificato. Le proposte appariranno nel prossimo")
+    print("get_context; per agire: merge_memories(...) / flag_stale(...).")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="wadachi",
@@ -189,6 +224,10 @@ def main() -> int:
     p_doc.add_argument("--no-mcp", action="store_true",
                        help="salta il controllo della registrazione in Claude Code")
 
+    p_sleep = sub.add_parser("sleep", help="il sonno del brain: report di consolidamento "
+                                           "(read-only, propone e basta — perfetto in cron)")
+    p_sleep.add_argument("--brain-dir", help="brain su cui far girare il sonno")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -197,6 +236,8 @@ def main() -> int:
         from wadachi.doctor import run_doctor
         brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()
         return run_doctor(brain, fix=args.fix, check_mcp=not args.no_mcp)
+    if args.command == "sleep":
+        return cmd_sleep(args)
 
     # nessun sottocomando → server MCP (import lazy: init non deve toccare
     # il BRAIN_DIR di default solo per colpa dell'import del server)

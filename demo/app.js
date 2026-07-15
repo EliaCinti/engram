@@ -443,6 +443,40 @@
     setTimeout(cycle, 1300);
   })();
 
+  // ── 6b · il loop dell'amnesia: la stessa spiegazione, per sempre ──
+  (function () {
+    var el = document.getElementById("ghost-type");
+    var cnt = document.getElementById("ghost-count");
+    if (!el) return;
+    var REMINDERS = [
+      'remember, we use the observer pattern here...',
+      'the deploy script needs the --release flag...',
+      'we already tried that -- it breaks the cache...',
+    ];
+    if (reduce) { el.textContent = REMINDERS[0]; return; }
+    var ri = 0, count = 14;
+    function typeLoop(txt, i, done) {
+      if (i > txt.length) { setTimeout(done, 1100); return; }
+      el.textContent = txt.slice(0, i);
+      setTimeout(function () { typeLoop(txt, i + 1, done); }, 34 + Math.random() * 30);
+    }
+    function eraseLoop(done) {
+      var txt = el.textContent;
+      if (!txt.length) { setTimeout(done, 320); return; }
+      el.textContent = txt.slice(0, -3);
+      setTimeout(function () { eraseLoop(done); }, 12);
+    }
+    (function cycle() {
+      typeLoop(REMINDERS[ri % REMINDERS.length], 0, function () {
+        eraseLoop(function () {
+          ri++; count++;
+          if (cnt) cnt.textContent = count;
+          cycle();
+        });
+      });
+    })();
+  })();
+
   // ── 7 · faint glyph rain texture ────────────────────────────────
   (function () {
     var c = document.getElementById("rain");

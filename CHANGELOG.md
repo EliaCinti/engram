@@ -3,7 +3,16 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
-## [Unreleased]
+## [0.10.0] — 2026-07-15
+
+### Added — il brain propone
+- **Le proposte in `get_context`**: a inizio sessione il brain dice cosa
+  suggerisce di fare — insight in attesa di giudizio, risultati dell'ultimo
+  sonno ("N gruppi da fondere, M memorie in decadimento"), o l'invito a far
+  girare il sonno se non gira da tempo. Il software propone spiegando cosa e
+  perché; l'umano decide. Sezione "## il brain propone" nel formato denso.
+- **CLI `wadachi sleep`**: il job periodico (perfetto in cron/launchd) — report
+  umano leggibile + cache che alimenta le proposte del prossimo get_context.
 
 ### Sito (Fase 6 — non impatta il package)
 - **Hero full-screen**: il grafo tipizzato full-bleed è il protagonista (27
@@ -15,6 +24,9 @@ Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](h
 - **Coerenza Sumi**: un solo accento — via il verde/rosso isolati dei kicker;
   layout allargato a 1280px.
 - **SEO**: og:image, canonical, JSON-LD SoftwareApplication.
+- **Scena problema→soluzione**: il loop dell'amnesia (terminale spettrale che
+  ridigita le stesse spiegazioni, contatore che sale) contro "One call.
+  Everything back." — attraversati dalle due pennellate wadachi.
 
 ## [0.9.0] — 2026-07-15
 
