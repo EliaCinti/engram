@@ -234,6 +234,17 @@ def main() -> int:
     p_obs.add_argument("--dry-run", action="store_true",
                        help="mostra cosa cambierebbe senza toccare nulla")
 
+    p_exp = sub.add_parser("export", help="archivio portabile dell'intero brain (READ-ONLY: "
+                                          "sicuro anche PRIMA di un upgrade/migrazione)")
+    p_exp.add_argument("--brain-dir", help="brain da esportare")
+    p_exp.add_argument("--out", help="file di destinazione (default: ./wadachi-export-<ts>.tar.gz)")
+
+    p_res = sub.add_parser("restore", help="ripristina un export in una cartella")
+    p_res.add_argument("archive", help="archivio wadachi-export-*.tar.gz")
+    p_res.add_argument("--to", required=True, help="cartella di destinazione (nuova)")
+    p_res.add_argument("--force", action="store_true",
+                       help="sovrascrivi una destinazione non vuota")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -244,6 +255,33 @@ def main() -> int:
         return run_doctor(brain, fix=args.fix, check_mcp=not args.no_mcp)
     if args.command == "sleep":
         return cmd_sleep(args)
+    if args.command == "export":
+        from wadachi.portability import export_brain
+        brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()
+        print(f"wadachi {__version__} — export (read-only, il brain non viene toccato)\n")
+        try:
+            res = export_brain(brain, out=args.out)
+        except FileNotFoundError as e:
+            print(f"  ✗ {e}")
+            return 1
+        m = res["manifest"]
+        counts = f"{m['memories']} memorie · {m['decisions']} decisioni" \
+            if m["memories"] is not None else "conteggi non disponibili"
+        print(f"  ✓ {res['archive']}")
+        print(f"    {m['markdown_files']} file markdown · {counts} · schema v{m['schema_version']}")
+        print(f"\nMettilo al sicuro. Per ripristinare: wadachi restore <archivio> --to <dir>")
+        return 0
+    if args.command == "restore":
+        from wadachi.portability import restore_brain
+        print(f"wadachi {__version__} — restore\n")
+        try:
+            res = restore_brain(args.archive, to=args.to, force=args.force)
+        except (FileNotFoundError, FileExistsError, ValueError) as e:
+            print(f"  ✗ {e}")
+            return 1
+        print(f"  ✓ ripristinato in {res['restored_to']}")
+        print(f"\nPer usarlo: BRAIN_DIR={res['restored_to']} — poi `wadachi doctor` per verificare.")
+        return 0
     if args.command == "obsidian":
         from wadachi.obsidian import run_backfill
         brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()

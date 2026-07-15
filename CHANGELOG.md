@@ -3,6 +3,26 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.12.0] — 2026-07-15
+
+### Added — la rete di sicurezza
+- **`wadachi export`** — archivio portabile e datato dell'intero brain
+  (markdown + DB + MANIFEST.json con versione, conteggi, schema).
+  **Rigorosamente read-only**: nessuna migrazione parte, il brain resta
+  byte-identico — sicuro anche su un brain dell'era Engram, PRIMA
+  dell'upgrade. Il percorso prudente: installa → esporta → poi migra.
+- **`wadachi restore <archivio> --to <dir>`** — ripristino in una cartella
+  nuova (rifiuta destinazioni non vuote senza `--force`), con guardia
+  path-traversal. Roundtrip testato: il brain ripristinato è subito usabile.
+
+### Changed
+- Cartelle canoniche su disco rinominate (`wadachi/`, `wadachi-brain/`)
+  con symlink di compatibilità dai vecchi nomi.
+
+### Tests
+- 6 test nuovi (131 totali), incluso il caso "brain Engram legacy esportato
+  senza che nulla lo tocchi".
+
 ## [0.11.0] — 2026-07-15
 
 ### Added

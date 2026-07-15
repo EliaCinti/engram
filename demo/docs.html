@@ -398,6 +398,8 @@ propose it. To act: write your synthesis and call
 <tr><td>wadachi doctor</td><td>read-only diagnosis; <code>--fix</code> repairs what's safe (dirs, frontmatter, index)</td></tr>
 <tr><td>wadachi sleep</td><td>consolidation report; feeds the next get_context's proposals. Cron-friendly</td></tr>
 <tr><td>wadachi obsidian</td><td>on-demand wikilink backfill for Obsidian; <code>--dry-run</code></td></tr>
+<tr><td>wadachi export</td><td>portable archive of the whole brain — strictly read-only, safe even <em>before</em> an upgrade</td></tr>
+<tr><td>wadachi restore</td><td>restore an export into a fresh directory (<code>--to</code>, refuses non-empty without <code>--force</code>)</td></tr>
 <tr><td>wadachi --version</td><td>version</td></tr>
 </tbody></table>
 <p>All commands accept <code>--brain-dir</code> or the <code>BRAIN_DIR</code> env var.</p>
@@ -413,8 +415,14 @@ propose it. To act: write your synthesis and call
 <li>Brains from any older version — including the Engram era (<code>~/.engram</code>) —
 are adopted in place. Nothing to export.</li>
 </ul>
-<pre class="code"><code>pipx upgrade wadachi     # or: uv tool upgrade wadachi
-wadachi doctor           # optional check — it will tell you if migrations are pending</code></pre>
+<pre class="code"><code># the cautious path (recommended if your brain matters to you — it should):
+wadachi export           # read-only portable snapshot, BEFORE anything migrates
+pipx upgrade wadachi     # or: uv tool upgrade wadachi
+wadachi doctor           # tells you if migrations are pending; they back up brain.db anyway</code></pre>
+<div class="callout"><p><strong>Coming from Engram?</strong> Install wadachi, run
+<code>wadachi export</code> immediately (it never touches the brain — no migrations run),
+put the archive somewhere safe, then proceed. Your <code>~/.engram</code> brain is adopted
+in place; <code>wadachi restore</code> can always bring you back.</p></div>
 
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>

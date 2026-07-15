@@ -355,9 +355,13 @@ touching anything. Existing brains from older versions (including the Engram
 era, `~/.engram`) are adopted in place: nothing to export, nothing to lose.
 
 ```bash
+wadachi export              # optional but wise: read-only portable snapshot first
 pipx upgrade wadachi        # or: uv tool upgrade wadachi
 # restart Claude Code — migrations (if any) run on first start, after a backup
 ```
+
+`wadachi export` never touches the brain (no migrations run) — safe even on a
+pre-wadachi Engram brain. `wadachi restore <archive> --to <dir>` brings it back.
 
 ---
 
