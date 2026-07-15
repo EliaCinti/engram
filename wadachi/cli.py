@@ -228,6 +228,12 @@ def main() -> int:
                                            "(read-only, propone e basta — perfetto in cron)")
     p_sleep.add_argument("--brain-dir", help="brain su cui far girare il sonno")
 
+    p_obs = sub.add_parser("obsidian", help="SU RICHIESTA: genera i wikilink [[slug]] per il "
+                                            "grafo di Obsidian (sezione Links in coda ai file)")
+    p_obs.add_argument("--brain-dir", help="brain su cui generare i link")
+    p_obs.add_argument("--dry-run", action="store_true",
+                       help="mostra cosa cambierebbe senza toccare nulla")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -238,6 +244,19 @@ def main() -> int:
         return run_doctor(brain, fix=args.fix, check_mcp=not args.no_mcp)
     if args.command == "sleep":
         return cmd_sleep(args)
+    if args.command == "obsidian":
+        from wadachi.obsidian import run_backfill
+        brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()
+        print(f"wadachi {__version__} — wikilink per Obsidian"
+              + (" (DRY RUN, nulla viene toccato)" if args.dry_run else "") + "\n")
+        st = run_backfill(brain, dry_run=args.dry_run)
+        verbo = "da aggiornare" if args.dry_run else "aggiornati"
+        print(f"  ✓ {st['scanned']} file esaminati · {st['updated']} {verbo} · "
+              f"{st['links']} wikilink generati"
+              + (f" · {st['unresolved']} riferimenti non risolti" if st['unresolved'] else ""))
+        if not args.dry_run and st["updated"]:
+            print(f"\nApri {brain} come vault in Obsidian: il grafo ora ha i collegamenti. 轍")
+        return 0
 
     # nessun sottocomando → server MCP (import lazy: init non deve toccare
     # il BRAIN_DIR di default solo per colpa dell'import del server)

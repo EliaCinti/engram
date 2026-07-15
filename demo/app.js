@@ -22,7 +22,7 @@
   var now = function () { return (performance.now() - T0) / 1000; };
 
   // ── 1 · curated graph model (hub → ring1 → ring2 + decisions) ───
-  var W = 920, H = 680, cx = W * 0.60, cy = H / 2;
+  var W = 1180, H = 860, cx = W * 0.60, cy = H / 2;
   var nodes = [], edges = [];
 
   function addNode(o) { o.id = nodes.length; nodes.push(o); return o.id; }
@@ -43,7 +43,7 @@
   ring1Defs.forEach(function (d, i) {
     var a = (i / ring1Defs.length) * Math.PI * 2 - Math.PI / 2;
     var id = addNode({
-      x: cx + Math.cos(a) * 158, y: cy + Math.sin(a) * 158,
+      x: cx + Math.cos(a) * 196, y: cy + Math.sin(a) * 196,
       r: 7.5, color: V, label: d.label, kind: "r1", ang: a,
     });
     ring1.push(id); edges.push({ a: hub, b: id, main: true });
@@ -66,7 +66,7 @@
       var a = p.ang + (j - (count - 1) / 2) * spread;
       var cat = ring1Defs[k].cat;
       var id = addNode({
-        x: cx + Math.cos(a) * 272, y: cy + Math.sin(a) * 272,
+        x: cx + Math.cos(a) * 336, y: cy + Math.sin(a) * 336,
         r: 4.6, color: CAT[cat] || V, label: leafLabels[li % leafLabels.length],
         kind: "r2",
       });
@@ -81,6 +81,26 @@
   edges.push({ a: ring1[1], b: ring1[4], cross: true });
   edges.push({ a: ring1[0], b: ring1[3], cross: true });
   edges.push({ a: ring1[2], b: ring1[5], cross: true });
+
+  // satelliti: piccole memorie appese a una foglia sì e una no (densità)
+  var satPreviews = [
+    "Related trace — one hop away in the graph.",
+    "A smaller note linked from its parent memory.",
+    "Follow-up captured mid-session.",
+    "Edge case documented after a bug.",
+  ];
+  var satCount = 0;
+  nodes.slice().forEach(function (n, idx) {
+    if (n.kind !== "r2" || idx % 2 === 0 || satCount >= 8) return;
+    var ang = Math.atan2(n.y - cy, n.x - cx) + (satCount % 2 ? 0.28 : -0.28);
+    var id = addNode({
+      x: cx + Math.cos(ang) * 425, y: cy + Math.sin(ang) * 425,
+      r: 3, color: "rgba(232,228,220,0.75)", label: "", kind: "r3",
+      preview: satPreviews[satCount % satPreviews.length],
+    });
+    edges.push({ a: n.id, b: id });
+    satCount++;
+  });
 
   // typed DECISION nodes (diamonds) — provenance is part of the graph
   var leafPreviews = [
@@ -120,7 +140,7 @@
     var pnode = nodes[ring1[d.near]];
     var a = pnode.ang + (i === 0 ? -0.62 : 0.62);
     var id = addNode({
-      x: cx + Math.cos(a) * 252, y: cy + Math.sin(a) * 252,
+      x: cx + Math.cos(a) * 306, y: cy + Math.sin(a) * 306,
       r: 6.2, color: CAT.decision, label: d.label, kind: "dec",
       preview: d.preview,
     });
@@ -133,7 +153,7 @@
   // reveal order: hub, then ring1, then ring2
   var nodeOrder = nodes.map(function (n) { return n.id; });
   nodeOrder.sort(function (a, b) {
-    var rank = { hub: 0, r1: 1, r2: 2, dec: 2 };
+    var rank = { hub: 0, r1: 1, r2: 2, dec: 2, r3: 3 };
     return rank[nodes[a].kind] - rank[nodes[b].kind];
   });
 

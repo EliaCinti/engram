@@ -1,0 +1,37 @@
+name: Release
+
+# Su ogni tag vX.Y.Z: test → build → pubblicazione su PyPI via Trusted
+# Publishing (OIDC: nessun token/segreto salvato su GitHub).
+# Setup una-tantum su pypi.org → progetto wadachi → Publishing →
+# GitHub: owner EliaCinti, repo wadachi, workflow release.yml, environment pypi.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e ".[dev]"
+      - run: pytest tests/ -q
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write          # Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Build
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

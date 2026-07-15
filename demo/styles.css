@@ -527,8 +527,8 @@ a.meta-pill:hover { color: var(--text); border-color: var(--text-faint); }
 
 #hero-svg { display: block; }
 .gnode { will-change: opacity, transform; }
-.glabel { font-family: var(--mono); font-size: 9px; fill: var(--text-dim); letter-spacing: .3px; }
-.glabel.hub { font-size: 11px; fill: var(--text); font-weight: 600; }
+.glabel { font-family: var(--mono); font-size: 12.5px; fill: var(--text-dim); letter-spacing: .3px; }
+.glabel.hub { font-size: 15px; fill: var(--text); font-weight: 600; }
 .build-meta { display: flex; align-items: center; gap: 16px; margin-top: 8px; padding: 0 6px; flex-wrap: wrap; }
 .bm-count { display: flex; flex-direction: column; }
 #node-count { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -.5px; font-variant-numeric: tabular-nums; }

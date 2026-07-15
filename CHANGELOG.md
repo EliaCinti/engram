@@ -3,6 +3,26 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.11.0] — 2026-07-15
+
+### Added
+- **`wadachi obsidian`** — SU RICHIESTA (mai automatico): genera i wikilink
+  `[[slug]]` per il grafo di Obsidian, appendendo una sezione `Links` marcata
+  in coda ai file che citano altre memorie per id. La prosa non si tocca mai;
+  ogni riscrittura è versionata (memory_versions) e invalida l'embedding del
+  file. `--dry-run` per vedere prima. Sul brain reale: 46 wikilink in 30 file.
+- **Release automatica** (`.github/workflows/release.yml`): su ogni tag `vX.Y.Z`
+  → test → build → pubblicazione su PyPI via Trusted Publishing (OIDC, zero
+  token). Richiede il setup una-tantum del publisher su pypi.org.
+- **`scripts/deploy-site.sh`**: deploy della landing con pill di versione
+  allineata automaticamente al package e bump opzionale del cache-buster.
+- **`scripts/backup-brain.sh`**: backup del brain con rotazione (pensato per
+  l'hook Stop di Claude Code).
+
+### Sito
+- Grafo hero "dezoomato": viewBox più ampio, 35 nodi (nuovo anello di
+  satelliti), label più grandi e nitide; repulsione al cursore ammorbidita.
+
 ## [0.10.0] — 2026-07-15
 
 ### Added — il brain propone
