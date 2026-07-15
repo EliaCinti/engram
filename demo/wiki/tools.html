@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tool reference — all 31 — wadachi wiki</title>
+<meta name="description" content="Grouped as the server groups them. Args in italics are optional.">
+<link rel="canonical" href="https://wadachi.eliacinti.dev/wiki/tools.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101012'/%3E%3Cpath d='M5 11.5C5 10.4 5.9 9.6 7 9.7L21 10.6C23.5 10.8 25.5 11.2 27 11.8C25.5 12.3 23.5 12.5 21 12.5L7 13.2C5.9 13.3 5 12.6 5 11.5Z' fill='%23E8E4DC'/%3E%3Cpath d='M5 19.5C5 18.4 5.9 17.6 7 17.7L19.5 18.6C22 18.8 24 19.2 25.5 19.8C24 20.3 22 20.5 19.5 20.5L7 21.2C5.9 21.3 5 20.6 5 19.5Z' fill='%23E8E4DC'/%3E%3Crect x='23' y='23' width='5' height='5' rx='1.4' fill='%23D9442B'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=10">
+<style>
+  .wk-wrap { max-width: 1280px; margin: 0 auto; padding: 96px clamp(18px,4vw,40px) 60px;
+              display: grid; grid-template-columns: 235px 1fr; gap: clamp(24px,4vw,64px); }
+  .wk-nav { position: sticky; top: 90px; align-self: start; font-size: 13px;
+             max-height: calc(100vh - 120px); overflow-y: auto; padding-right: 6px; }
+  .wk-nav .g { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.2px;
+             text-transform: uppercase; color: var(--accent); margin: 18px 0 6px; }
+  .wk-nav a { display: block; color: var(--text-dim); padding: 3px 0 3px 10px;
+             border-left: 1.5px solid var(--border); transition: color .15s, border-color .15s; }
+  .wk-nav a:hover { color: var(--text); border-color: var(--accent); }
+  .wk-nav a.on { color: var(--text); border-color: var(--accent); }
+  .wk-main { min-width: 0; }
+  .wk-main h1 { font-size: clamp(32px,3.6vw,46px); margin-bottom: 22px; }
+  .wk-main h2 { font-size: clamp(22px,2.4vw,29px); margin: 44px 0 12px; padding-top: 16px;
+             border-top: 0.5px solid var(--border); }
+  .wk-main h3 { font-size: 17.5px; margin: 26px 0 8px; color: var(--text); }
+  .wk-main p, .wk-main li { font-size: 14.5px; color: var(--text-dim); line-height: 1.75; }
+  .wk-main p { margin-bottom: 13px; max-width: 730px; }
+  .wk-main ul, .wk-main ol { margin: 0 0 15px 20px; max-width: 710px; }
+  .wk-main li { margin-bottom: 6px; }
+  .wk-main strong { color: var(--text); }
+  .wk-main a { color: var(--accent); }
+  .wk-main a:hover { text-decoration: underline; }
+  .wk-main a.wl { color: var(--text); border-bottom: 1px dashed rgba(217,68,43,0.5); }
+  .wk-main a.wl:hover { color: var(--accent); text-decoration: none; }
+  .wk-main pre { font-family: var(--mono); font-size: 12.8px; line-height: 1.7;
+             background: #0B0B0D; border: 0.5px solid var(--border); border-radius: 11px;
+             padding: 15px 17px; color: #D8D2C4; overflow-x: auto; margin: 14px 0 18px;
+             max-width: 730px; }
+  .wk-main pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .wk-main table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0 22px; }
+  .wk-main th, .wk-main td { text-align: left; padding: 9px 12px;
+             border-bottom: 0.5px solid var(--border); vertical-align: top; }
+  .wk-main th { font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+             letter-spacing: 0.6px; color: var(--text-faint); font-weight: 500; }
+  .wk-main td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+  .wk-main td { color: var(--text-dim); }
+  .wk-main blockquote { border-left: 2px solid var(--accent); background: rgba(217,68,43,0.05);
+             border-radius: 0 10px 10px 0; padding: 11px 16px; margin: 16px 0 20px;
+             max-width: 710px; }
+  .wk-main blockquote p { margin: 0; font-size: 13.5px; }
+  .wk-foot { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px;
+             padding-top: 18px; border-top: 0.5px solid var(--border); font-size: 13.5px; }
+  .wk-foot a { color: var(--text-dim); }
+  .wk-foot a:hover { color: var(--accent); }
+  .tblw { overflow-x: auto; }
+  @media (max-width: 880px) { .wk-wrap { grid-template-columns: 1fr; }
+             .wk-nav { position: static; max-height: none; } }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="40 130 470 310" xmlns="http://www.w3.org/2000/svg">
+        <g fill="currentColor">
+          <path d="M 74 184 C 64 166, 76 150, 96 150 C 170 146, 264 158, 344 174 C 394 183, 434 193, 462 205 C 434 211, 394 212, 344 208 C 264 202, 166 200, 96 212 C 80 214, 68 200, 74 184 Z"/>
+          <path d="M 470 203 C 484 201, 494 201, 502 199 C 494 207, 484 209, 470 210 Z"/>
+          <path d="M 74 300 C 64 282, 76 266, 96 266 C 170 262, 260 274, 336 290 C 382 299, 418 309, 444 319 C 418 325, 382 326, 336 322 C 260 316, 166 314, 96 328 C 80 330, 68 316, 74 300 Z"/>
+          <path d="M 452 317 C 466 315, 476 315, 486 313 C 476 321, 466 323, 452 324 Z"/>
+        </g>
+        <rect x="410" y="376" width="56" height="56" rx="10" fill="#D9442B"/>
+      </svg>
+    </span>
+    <span class="brand-name">wadachi</span>
+  </a>
+  <nav class="nav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" style="color:var(--text)">Wiki</a>
+    <a class="nav-gh" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+<div class="wk-wrap">
+<nav class="wk-nav" aria-label="wiki"><div class="g">Start here</div>
+<a href="index.html">Welcome to the wadachi wiki</a>
+<a href="installation.html">Installation</a>
+<a href="connect.html">Connecting your client</a>
+<div class="g">The brain</div>
+<a href="brain.html">The brain on disk</a>
+<a href="memories.html">Memories</a>
+<a href="projects.html">Projects &amp; scoping</a>
+<a href="decisions.html">Decisions</a>
+<div class="g">Intelligence</div>
+<a href="get-context.html">get_context — start here, every session</a>
+<a href="search.html">Search &amp; retrieval</a>
+<a href="beliefs.html">Beliefs, staleness &amp; decay</a>
+<a href="graph.html">The typed knowledge graph</a>
+<div class="g">Maintenance</div>
+<a href="sleep.html">Sleep — consolidation, proposed</a>
+<a href="consolidation.html">Consolidation, insights &amp; procedures</a>
+<a href="time-travel.html">Provenance &amp; time-travel</a>
+<a href="obsidian-okf.html">LLM Wiki, Obsidian &amp; OKF</a>
+<div class="g">Safety</div>
+<a href="safety.html">Safety — the whole chain</a>
+<div class="g">Reference</div>
+<a href="tools.html" class="on">Tool reference — all 31</a>
+<a href="cli.html">CLI reference</a>
+<a href="troubleshooting.html">Troubleshooting</a>
+<a href="faq.html">FAQ — the honest answers</a></nav>
+<main class="wk-main">
+<h1>Tool reference — all 31</h1>
+<p>Grouped as the server groups them. Args in <em>italics</em> are optional.</p>
+<h2>Memory</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>store_memory</td>
+<td>content, title, <em>project, tags, category</em></td>
+<td>save knowledge (<a class="wl" href="memories.html">Memories</a>)</td>
+</tr>
+<tr>
+<td>get_memory</td>
+<td>memory_id</td>
+<td>full content by id; counts as access</td>
+</tr>
+<tr>
+<td>list_memories</td>
+<td><em>project, category</em></td>
+<td>browse the index</td>
+</tr>
+<tr>
+<td>update_memory</td>
+<td>memory_id, <em>content, tags</em></td>
+<td>replace — previous version kept</td>
+</tr>
+<tr>
+<td>delete_memory</td>
+<td>memory_id</td>
+<td>permanent (prefer flag_stale)</td>
+</tr>
+<tr>
+<td>memory_history</td>
+<td>memory_id</td>
+<td>all prior versions</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Search &amp; context</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>get_context</td>
+<td><em>cwd, task_description, limit, max_tokens, format</em></td>
+<td>dense session start + proposals (<a class="wl" href="get-context.html">get_context — start here, every session</a>)</td>
+</tr>
+<tr>
+<td>recall</td>
+<td>query, <em>project, limit, neighbors</em></td>
+<td>semantic/keyword search, annotated (<a class="wl" href="search.html">Search &amp; retrieval</a>)</td>
+</tr>
+<tr>
+<td>expand_memory</td>
+<td>ids</td>
+<td>batch pointer → full content (max 10)</td>
+</tr>
+<tr>
+<td>brain_status</td>
+<td>—</td>
+<td>health, search mode, stats, projects</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Decisions &amp; projects</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>store_decision</td>
+<td>decision, <em>rationale, alternatives, context, project</em></td>
+<td>record a choice (<a class="wl" href="decisions.html">Decisions</a>)</td>
+</tr>
+<tr>
+<td>list_decisions</td>
+<td><em>project, limit</em></td>
+<td>recent decisions</td>
+</tr>
+<tr>
+<td>register_project</td>
+<td>name, <em>description, paths</em></td>
+<td>enable auto-detection (<a class="wl" href="projects.html">Projects &amp; scoping</a>)</td>
+</tr>
+<tr>
+<td>list_projects</td>
+<td>—</td>
+<td>all registered</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Graph</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recall_associative</td>
+<td>query, <em>project, limit</em></td>
+<td>spreading activation + baseline (<a class="wl" href="graph.html">The typed knowledge graph</a>)</td>
+</tr>
+<tr>
+<td>related_memories</td>
+<td>memory_id, <em>limit</em></td>
+<td>strongest typed neighbours</td>
+</tr>
+<tr>
+<td>memory_graph</td>
+<td><em>project, focus_id, include_entities</em></td>
+<td>stats, hubs, orphans, Mermaid</td>
+</tr>
+<tr>
+<td>rebuild_entity_graph</td>
+<td><em>project</em></td>
+<td>optional entity layer (local claude CLI)</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Beliefs</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>review_beliefs</td>
+<td><em>project</em></td>
+<td>read-only stale scan (<a class="wl" href="beliefs.html">Beliefs, staleness &amp; decay</a>)</td>
+</tr>
+<tr>
+<td>set_belief</td>
+<td>memory_id, <em>confidence, status, valid_until, review_reason, superseded_by</em></td>
+<td>edit the envelope</td>
+</tr>
+<tr>
+<td>flag_stale</td>
+<td>memory_id, reason, <em>superseded_by</em></td>
+<td>confirm staleness — recoverable</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Reflection &amp; procedures</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reflect</td>
+<td><em>project, limit, store_them</em></td>
+<td>cross-memory insight candidates (<a class="wl" href="consolidation.html">Consolidation, insights &amp; procedures</a>)</td>
+</tr>
+<tr>
+<td>list_insights</td>
+<td><em>status</em></td>
+<td>the proposal queue</td>
+</tr>
+<tr>
+<td>accept_insight</td>
+<td>insight_id, <em>project</em></td>
+<td>promote to linked memory</td>
+</tr>
+<tr>
+<td>reject_insight</td>
+<td>insight_id</td>
+<td>keep as rejected</td>
+</tr>
+<tr>
+<td>review_procedures</td>
+<td><em>project</em></td>
+<td>incident clusters → candidate rules</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Consolidation &amp; time</h2>
+<div class="tblw"><table>
+<thead>
+<tr>
+<th>tool</th>
+<th>args</th>
+<th>does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sleep</td>
+<td><em>project, min_similarity</em></td>
+<td>the full housekeeping report (<a class="wl" href="sleep.html">Sleep — consolidation, proposed</a>)</td>
+</tr>
+<tr>
+<td>consolidate</td>
+<td><em>project, threshold, max_groups</em></td>
+<td>similarity-based merge groups</td>
+</tr>
+<tr>
+<td>merge_memories</td>
+<td>source_ids, title, content, <em>project, tags</em></td>
+<td>your synthesis + supersession</td>
+</tr>
+<tr>
+<td>why</td>
+<td>question, <em>project, limit</em></td>
+<td>decision provenance (<a class="wl" href="time-travel.html">Provenance &amp; time-travel</a>)</td>
+</tr>
+<tr>
+<td>as_of</td>
+<td>date, <em>query, project, limit</em></td>
+<td>the brain at a past date</td>
+</tr>
+</tbody>
+</table></div>
+<div class="wk-foot"><a href="safety.html">← Safety — the whole chain</a><a href="cli.html">CLI reference →</a></div>
+</main>
+</div>
+<footer class="footer">
+  <p class="footer-note">wadachi 轍 wiki — a wiki about an LLM Wiki, built as one:
+     markdown + wikilinks, compiled to HTML.
+     <a href="https://github.com/EliaCinti/wadachi/tree/main/demo/wiki-src">source</a></p>
+  <div class="footer-kanji" aria-hidden="true">轍</div>
+</footer>
+</body>
+</html>

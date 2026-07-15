@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects &amp; scoping — wadachi wiki</title>
+<meta name="description" content="Projects keep knowledge from different worlds apart — and declare it when it crosses.">
+<link rel="canonical" href="https://wadachi.eliacinti.dev/wiki/projects.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101012'/%3E%3Cpath d='M5 11.5C5 10.4 5.9 9.6 7 9.7L21 10.6C23.5 10.8 25.5 11.2 27 11.8C25.5 12.3 23.5 12.5 21 12.5L7 13.2C5.9 13.3 5 12.6 5 11.5Z' fill='%23E8E4DC'/%3E%3Cpath d='M5 19.5C5 18.4 5.9 17.6 7 17.7L19.5 18.6C22 18.8 24 19.2 25.5 19.8C24 20.3 22 20.5 19.5 20.5L7 21.2C5.9 21.3 5 20.6 5 19.5Z' fill='%23E8E4DC'/%3E%3Crect x='23' y='23' width='5' height='5' rx='1.4' fill='%23D9442B'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../styles.css?v=10">
+<style>
+  .wk-wrap { max-width: 1280px; margin: 0 auto; padding: 96px clamp(18px,4vw,40px) 60px;
+              display: grid; grid-template-columns: 235px 1fr; gap: clamp(24px,4vw,64px); }
+  .wk-nav { position: sticky; top: 90px; align-self: start; font-size: 13px;
+             max-height: calc(100vh - 120px); overflow-y: auto; padding-right: 6px; }
+  .wk-nav .g { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.2px;
+             text-transform: uppercase; color: var(--accent); margin: 18px 0 6px; }
+  .wk-nav a { display: block; color: var(--text-dim); padding: 3px 0 3px 10px;
+             border-left: 1.5px solid var(--border); transition: color .15s, border-color .15s; }
+  .wk-nav a:hover { color: var(--text); border-color: var(--accent); }
+  .wk-nav a.on { color: var(--text); border-color: var(--accent); }
+  .wk-main { min-width: 0; }
+  .wk-main h1 { font-size: clamp(32px,3.6vw,46px); margin-bottom: 22px; }
+  .wk-main h2 { font-size: clamp(22px,2.4vw,29px); margin: 44px 0 12px; padding-top: 16px;
+             border-top: 0.5px solid var(--border); }
+  .wk-main h3 { font-size: 17.5px; margin: 26px 0 8px; color: var(--text); }
+  .wk-main p, .wk-main li { font-size: 14.5px; color: var(--text-dim); line-height: 1.75; }
+  .wk-main p { margin-bottom: 13px; max-width: 730px; }
+  .wk-main ul, .wk-main ol { margin: 0 0 15px 20px; max-width: 710px; }
+  .wk-main li { margin-bottom: 6px; }
+  .wk-main strong { color: var(--text); }
+  .wk-main a { color: var(--accent); }
+  .wk-main a:hover { text-decoration: underline; }
+  .wk-main a.wl { color: var(--text); border-bottom: 1px dashed rgba(217,68,43,0.5); }
+  .wk-main a.wl:hover { color: var(--accent); text-decoration: none; }
+  .wk-main pre { font-family: var(--mono); font-size: 12.8px; line-height: 1.7;
+             background: #0B0B0D; border: 0.5px solid var(--border); border-radius: 11px;
+             padding: 15px 17px; color: #D8D2C4; overflow-x: auto; margin: 14px 0 18px;
+             max-width: 730px; }
+  .wk-main pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .wk-main table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0 22px; }
+  .wk-main th, .wk-main td { text-align: left; padding: 9px 12px;
+             border-bottom: 0.5px solid var(--border); vertical-align: top; }
+  .wk-main th { font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+             letter-spacing: 0.6px; color: var(--text-faint); font-weight: 500; }
+  .wk-main td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+  .wk-main td { color: var(--text-dim); }
+  .wk-main blockquote { border-left: 2px solid var(--accent); background: rgba(217,68,43,0.05);
+             border-radius: 0 10px 10px 0; padding: 11px 16px; margin: 16px 0 20px;
+             max-width: 710px; }
+  .wk-main blockquote p { margin: 0; font-size: 13.5px; }
+  .wk-foot { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px;
+             padding-top: 18px; border-top: 0.5px solid var(--border); font-size: 13.5px; }
+  .wk-foot a { color: var(--text-dim); }
+  .wk-foot a:hover { color: var(--accent); }
+  .tblw { overflow-x: auto; }
+  @media (max-width: 880px) { .wk-wrap { grid-template-columns: 1fr; }
+             .wk-nav { position: static; max-height: none; } }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="40 130 470 310" xmlns="http://www.w3.org/2000/svg">
+        <g fill="currentColor">
+          <path d="M 74 184 C 64 166, 76 150, 96 150 C 170 146, 264 158, 344 174 C 394 183, 434 193, 462 205 C 434 211, 394 212, 344 208 C 264 202, 166 200, 96 212 C 80 214, 68 200, 74 184 Z"/>
+          <path d="M 470 203 C 484 201, 494 201, 502 199 C 494 207, 484 209, 470 210 Z"/>
+          <path d="M 74 300 C 64 282, 76 266, 96 266 C 170 262, 260 274, 336 290 C 382 299, 418 309, 444 319 C 418 325, 382 326, 336 322 C 260 316, 166 314, 96 328 C 80 330, 68 316, 74 300 Z"/>
+          <path d="M 452 317 C 466 315, 476 315, 486 313 C 476 321, 466 323, 452 324 Z"/>
+        </g>
+        <rect x="410" y="376" width="56" height="56" rx="10" fill="#D9442B"/>
+      </svg>
+    </span>
+    <span class="brand-name">wadachi</span>
+  </a>
+  <nav class="nav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" style="color:var(--text)">Wiki</a>
+    <a class="nav-gh" href="https://github.com/EliaCinti/wadachi" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+<div class="wk-wrap">
+<nav class="wk-nav" aria-label="wiki"><div class="g">Start here</div>
+<a href="index.html">Welcome to the wadachi wiki</a>
+<a href="installation.html">Installation</a>
+<a href="connect.html">Connecting your client</a>
+<div class="g">The brain</div>
+<a href="brain.html">The brain on disk</a>
+<a href="memories.html">Memories</a>
+<a href="projects.html" class="on">Projects &amp; scoping</a>
+<a href="decisions.html">Decisions</a>
+<div class="g">Intelligence</div>
+<a href="get-context.html">get_context — start here, every session</a>
+<a href="search.html">Search &amp; retrieval</a>
+<a href="beliefs.html">Beliefs, staleness &amp; decay</a>
+<a href="graph.html">The typed knowledge graph</a>
+<div class="g">Maintenance</div>
+<a href="sleep.html">Sleep — consolidation, proposed</a>
+<a href="consolidation.html">Consolidation, insights &amp; procedures</a>
+<a href="time-travel.html">Provenance &amp; time-travel</a>
+<a href="obsidian-okf.html">LLM Wiki, Obsidian &amp; OKF</a>
+<div class="g">Safety</div>
+<a href="safety.html">Safety — the whole chain</a>
+<div class="g">Reference</div>
+<a href="tools.html">Tool reference — all 31</a>
+<a href="cli.html">CLI reference</a>
+<a href="troubleshooting.html">Troubleshooting</a>
+<a href="faq.html">FAQ — the honest answers</a></nav>
+<main class="wk-main">
+<h1>Projects &amp; scoping</h1>
+<p>Projects keep knowledge from different worlds apart — and declare it when it crosses.</p>
+<h2>Registering</h2>
+<pre><code>register_project(
+  name        = &quot;myapp&quot;,
+  description = &quot;The realtime sync engine&quot;,
+  paths       = [&quot;/Users/you/code/myapp&quot;])
+</code></pre>
+<p>Paths power <strong>auto-detection</strong>: when <code>get_context(cwd=...)</code> is called from anywhere
+inside a registered path (subdirectories included), the project is detected and the
+context scoped automatically. One project can register several paths.</p>
+<h2>What scoping means</h2>
+<p>A search scoped to project <code>myapp</code> sees:</p>
+<ul>
+<li>memories of <code>myapp</code>, <strong>plus</strong></li>
+<li>memories of <code>global</code> — the cross-cutting knowledge every project shares.</li>
+</ul>
+<h2>Evidence scoping</h2>
+<p>Scoped results <strong>declare where each piece of evidence comes from</strong>: every memory in
+a scoped recall carries <code>scope: "project"</code> or <code>scope: "global"</code>. When your agent
+reasons from retrieved memories, it can tell project-specific facts from general
+rules — projects never silently contaminate each other's inferences. This is an
+open problem in the LLM-wiki ecosystem; wadachi's answer is to make provenance
+explicit rather than pretend isolation.</p>
+<h2>global: use it deliberately</h2>
+<p><code>global</code> is for knowledge that is <em>genuinely</em> cross-project: your dev environment,
+personal conventions, reusable gotchas ("Docker bind-mounts break on rename").
+Project-specific details stored in <code>global</code> pollute every other project's context —
+when in doubt, scope to the project.</p>
+<h2>The graph respects scope too</h2>
+<p><code>recall_associative</code>, <code>memory_graph</code>, <a class="wl" href="sleep.html">Sleep — consolidation, proposed</a> — all accept a <code>project</code> argument
+and build the graph over that scope only.</p>
+<div class="wk-foot"><a href="memories.html">← Memories</a><a href="decisions.html">Decisions →</a></div>
+</main>
+</div>
+<footer class="footer">
+  <p class="footer-note">wadachi 轍 wiki — a wiki about an LLM Wiki, built as one:
+     markdown + wikilinks, compiled to HTML.
+     <a href="https://github.com/EliaCinti/wadachi/tree/main/demo/wiki-src">source</a></p>
+  <div class="footer-kanji" aria-hidden="true">轍</div>
+</footer>
+</body>
+</html>
