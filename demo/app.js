@@ -22,7 +22,10 @@
   var now = function () { return (performance.now() - T0) / 1000; };
 
   // ── 1 · curated graph model (hub → ring1 → ring2 + decisions) ───
-  var W = 1180, H = 860, cx = W * 0.60, cy = H / 2;
+  // Il "mondo" si adatta alle proporzioni reali del contenitore (niente
+  // crop/zoom su schermi larghi): W è ricalcolato in layout(), i nodi
+  // memorizzano coordinate polari (R, ang) e vengono riproiettati.
+  var H = 860, W = 1180, cx = W * 0.58, cy = H / 2;
   var nodes = [], edges = [];
 
   function addNode(o) { o.id = nodes.length; nodes.push(o); return o.id; }
@@ -44,7 +47,7 @@
     var a = (i / ring1Defs.length) * Math.PI * 2 - Math.PI / 2;
     var id = addNode({
       x: cx + Math.cos(a) * 196, y: cy + Math.sin(a) * 196,
-      r: 7.5, color: V, label: d.label, kind: "r1", ang: a,
+      r: 7.5, color: V, label: d.label, kind: "r1", ang: a, R: 196,
     });
     ring1.push(id); edges.push({ a: hub, b: id, main: true });
   });
@@ -68,7 +71,7 @@
       var id = addNode({
         x: cx + Math.cos(a) * 336, y: cy + Math.sin(a) * 336,
         r: 4.6, color: CAT[cat] || V, label: leafLabels[li % leafLabels.length],
-        kind: "r2",
+        kind: "r2", ang: a, R: 336, ell: true,
       });
       li++;
       edges.push({ a: pid, b: id });
@@ -96,6 +99,7 @@
     var id = addNode({
       x: cx + Math.cos(ang) * 425, y: cy + Math.sin(ang) * 425,
       r: 3, color: "rgba(232,228,220,0.75)", label: "", kind: "r3",
+      ang: ang, R: 425, ell: true,
       preview: satPreviews[satCount % satPreviews.length],
     });
     edges.push({ a: n.id, b: id });
@@ -132,7 +136,7 @@
   var decDefs = [
     { label: "D3 · Yjs over Automerge", near: 1,
       preview: "WHY: smaller payload, faster merge. REJECTED: Automerge (memory footprint). Ask why() and the graph answers." },
-    { label: "D7 · SQLite, not Postgres", near: 5,
+    { label: "D7 · SQLite, not Postgres", near: 2,
       preview: "WHY: local-first, zero-config, one file. REJECTED: Postgres (overkill at this scale)." },
   ];
   var decIds = [];
@@ -142,6 +146,7 @@
     var id = addNode({
       x: cx + Math.cos(a) * 306, y: cy + Math.sin(a) * 306,
       r: 6.2, color: CAT.decision, label: d.label, kind: "dec",
+      ang: a, R: 306, ell: true,
       preview: d.preview,
     });
     decIds.push(id);
@@ -170,6 +175,30 @@
 
   // dynamic per-node state: offset (ox,oy) + velocity (vx,vy) for repulsion
   nodes.forEach(function (n) { n.ox = 0; n.oy = 0; n.vx = 0; n.vy = 0; n.vis = 0; });
+
+  // layout adattivo: il mondo combacia con le proporzioni del contenitore —
+  // su schermi larghi si vede PIÙ grafo (ellisse allargata), mai crop/zoom
+  function layout() {
+    var stage = svg.closest(".hero-stage") || svg.parentElement;
+    var aspect = stage && stage.clientHeight
+      ? Math.max(1.0, Math.min(stage.clientWidth / stage.clientHeight, 2.3)) : 1.37;
+    W = Math.round(H * aspect);
+    cx = W * 0.58;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    var KX = Math.max(1, (W / 1180) * 0.96);
+    nodes.forEach(function (n) {
+      if (n.kind === "hub") { n.x = cx; n.y = cy; return; }
+      if (n.R == null) return;
+      n.x = cx + Math.cos(n.ang) * n.R * (n.ell ? KX : 1);
+      n.y = cy + Math.sin(n.ang) * n.R;
+    });
+  }
+  layout();
+  var _rsz;
+  addEventListener("resize", function () {
+    clearTimeout(_rsz);
+    _rsz = setTimeout(layout, 250);
+  });
 
   // edges — plain lines, opacity-revealed, endpoints follow displaced nodes
   edges.forEach(function (e) {
