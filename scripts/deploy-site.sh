@@ -38,7 +38,7 @@ print(f"  cache-buster → v={cur+1}")
 EOF
 fi
 
-rsync -az -e "ssh -i $KEY" "$DEMO/index.html" "$DEMO/styles.css" "$DEMO/app.js" \
+rsync -az -e "ssh -i $KEY" "$DEMO/index.html" "$DEMO/docs.html" "$DEMO/styles.css" "$DEMO/app.js" \
   "$DEMO/og.png" "$DEMO/fonts" "$DEST"
 echo "  deploy ok → https://wadachi.eliacinti.dev"
 curl -s -o /dev/null -w "  verifica: HTTP %{http_code}\n" --max-time 20 "https://wadachi.eliacinti.dev/"

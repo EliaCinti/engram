@@ -183,7 +183,7 @@
     var aspect = stage && stage.clientHeight
       ? Math.max(1.0, Math.min(stage.clientWidth / stage.clientHeight, 2.3)) : 1.37;
     W = Math.round(H * aspect);
-    cx = W * 0.58;
+    cx = W * 0.62;
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     var KX = Math.max(1, (W / 1180) * 0.96);
     nodes.forEach(function (n) {
