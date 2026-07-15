@@ -4,7 +4,7 @@
 # Rotazione: tiene gli ultimi 10 backup di sessione.
 
 set -euo pipefail
-BRAIN="${BRAIN_DIR:-/Volumes/ExtremeSSD/engram-brain}"
+BRAIN="${BRAIN_DIR:-/Volumes/ExtremeSSD/wadachi-brain}"
 [ -d "$BRAIN" ] || exit 0                     # SSD non montato: esci in silenzio
 
 DEST="$BRAIN/backups"

@@ -13,8 +13,8 @@ set -euo pipefail
 
 # ── Configurazione condivisa (IDENTICA su ogni Mac) ──────────────────────────
 SSD="/Volumes/ExtremeSSD"
-ENGRAM_REPO="$SSD/engram"
-BRAIN_DIR="$SSD/engram-brain"
+ENGRAM_REPO="$SSD/wadachi"
+BRAIN_DIR="$SSD/wadachi-brain"
 
 # ── Ambiente per-macchina (NON sull'SSD: il venv è locale e ricreabile) ──────
 VENV="$HOME/.local/share/engram/venv"

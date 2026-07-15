@@ -11,7 +11,7 @@
 set -euo pipefail
 
 SSD="/Volumes/ExtremeSSD"
-export BRAIN_DIR="${BRAIN_DIR:-$SSD/engram-brain}"
+export BRAIN_DIR="${BRAIN_DIR:-$SSD/wadachi-brain}"
 VENV="$HOME/.local/share/engram/venv"
 
 die() { printf '\033[1;31m[wadachi] ERRORE:\033[0m %s\n' "$*" >&2; exit 1; }
