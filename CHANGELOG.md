@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com) · versioning: [SemVer](https://semver.org) (pre-1.0: minor = può rompere).
 
+## [0.13.0] — 2026-07-15
+
+### Added
+- **`wadachi restore --replace`** — "riparti da qui": sostituisce il brain
+  ATTIVO con un export precedente, in un comando. Prima di toccare qualsiasi
+  cosa, lo stato corrente viene esportato in `backups/pre-restore-<ts>.tar.gz`
+  — anche il viaggio nel passato è reversibile. `backups/` e `logs/` correnti
+  sono preservati; il MANIFEST non resta nel brain vivo.
+
 ## [0.12.0] — 2026-07-15
 
 ### Added — la rete di sicurezza

@@ -89,6 +89,50 @@ def export_brain(brain_dir: str | Path, out: str | Path | None = None) -> dict:
     return {"archive": str(archive), "manifest": manifest}
 
 
+def restore_in_place(archive: str | Path, brain_dir: str | Path) -> dict:
+    """"Riparti da qui": sostituisce il brain ATTIVO con l'export.
+
+    Sicurezza prima di tutto: lo stato corrente viene esportato in
+    backups/pre-restore-<ts>.tar.gz PRIMA di toccare qualsiasi cosa —
+    anche il viaggio nel passato è reversibile. backups/ e logs/ del
+    brain corrente vengono preservati.
+    """
+    import shutil
+    archive = Path(archive).expanduser()
+    brain = Path(brain_dir).expanduser()
+    if not archive.exists():
+        raise FileNotFoundError(f"archivio non trovato: {archive}")
+    brain.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    safety = None
+    if any((brain / n).exists() for n in _INCLUDE):
+        (brain / "backups").mkdir(exist_ok=True)
+        safety = export_brain(brain, out=brain / "backups" / f"pre-restore-{ts}.tar.gz")["archive"]
+
+    # via lo stato corrente (backups/ e logs/ restano)
+    for name in _INCLUDE:
+        target = brain / name
+        if target.is_dir():
+            shutil.rmtree(target)
+        elif target.exists():
+            target.unlink()
+
+    with tarfile.open(archive, "r:gz") as tar:
+        for m in tar.getmembers():
+            resolved = (brain / m.name).resolve()
+            if not str(resolved).startswith(str(brain.resolve())):
+                raise ValueError(f"percorso sospetto nell'archivio: {m.name}")
+        tar.extractall(brain)
+
+    manifest = {}
+    mpath = brain / "MANIFEST.json"
+    if mpath.exists():
+        manifest = json.loads(mpath.read_text())
+        mpath.unlink()                      # non è parte del brain vivo
+    return {"restored_to": str(brain), "safety_export": safety, "manifest": manifest}
+
+
 def restore_brain(archive: str | Path, to: str | Path, force: bool = False) -> dict:
     """Ripristina un export in `to`. Rifiuta destinazioni non vuote senza force."""
     archive = Path(archive).expanduser()

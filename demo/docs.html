@@ -399,7 +399,7 @@ propose it. To act: write your synthesis and call
 <tr><td>wadachi sleep</td><td>consolidation report; feeds the next get_context's proposals. Cron-friendly</td></tr>
 <tr><td>wadachi obsidian</td><td>on-demand wikilink backfill for Obsidian; <code>--dry-run</code></td></tr>
 <tr><td>wadachi export</td><td>portable archive of the whole brain — strictly read-only, safe even <em>before</em> an upgrade</td></tr>
-<tr><td>wadachi restore</td><td>restore an export into a fresh directory (<code>--to</code>, refuses non-empty without <code>--force</code>)</td></tr>
+<tr><td>wadachi restore</td><td>bring an export back: <code>--to &lt;new-dir&gt;</code>, or <code>--replace</code> to swap the <em>active</em> brain (current state is safety-exported first)</td></tr>
 <tr><td>wadachi --version</td><td>version</td></tr>
 </tbody></table>
 <p>All commands accept <code>--brain-dir</code> or the <code>BRAIN_DIR</code> env var.</p>
@@ -422,7 +422,8 @@ wadachi doctor           # tells you if migrations are pending; they back up bra
 <div class="callout"><p><strong>Coming from Engram?</strong> Install wadachi, run
 <code>wadachi export</code> immediately (it never touches the brain — no migrations run),
 put the archive somewhere safe, then proceed. Your <code>~/.engram</code> brain is adopted
-in place; <code>wadachi restore</code> can always bring you back.</p></div>
+in place; <code>wadachi restore &lt;archive&gt; --replace</code> can always bring you back —
+and it safety-exports the current state first, so even going back is reversible.</p></div>
 
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>

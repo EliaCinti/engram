@@ -3,6 +3,7 @@
 import json
 import sqlite3
 import tarfile
+from pathlib import Path as pathlib_Path
 
 import pytest
 
@@ -93,3 +94,24 @@ def test_restore_refuses_non_empty_without_force(store, tmp_path):
 def test_export_missing_brain_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         export_brain(tmp_path / "non-esiste")
+
+
+def test_restore_replace_time_machine(store, tmp_path):
+    """'Riparti da qui': il brain torna allo stato dell'export, il presente è salvato."""
+    from wadachi.portability import restore_in_place
+    kept = store.store_memory("questa c'era all'export", "Del Passato")
+    snap = export_brain(store.brain_dir, out=tmp_path / "snap.tar.gz")
+    later = store.store_memory("questa è arrivata dopo", "Del Futuro")
+
+    res = restore_in_place(snap["archive"], brain_dir=store.brain_dir)
+
+    from wadachi.store import MemoryStore
+    s2 = MemoryStore(str(store.brain_dir))
+    assert s2.get_memory(kept["id"])["content"] == "questa c'era all'export"
+    assert s2.get_memory(later["id"]) is None          # il futuro non c'è più...
+    assert res["safety_export"]                        # ...ma è al sicuro
+    with __import__("tarfile").open(res["safety_export"]) as tar:
+        names = tar.getnames()
+    assert any("del-futuro" in n for n in names)       # e contiene la memoria persa
+    assert not (pathlib_Path(store.brain_dir) / "MANIFEST.json").exists()
+

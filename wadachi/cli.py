@@ -239,11 +239,16 @@ def main() -> int:
     p_exp.add_argument("--brain-dir", help="brain da esportare")
     p_exp.add_argument("--out", help="file di destinazione (default: ./wadachi-export-<ts>.tar.gz)")
 
-    p_res = sub.add_parser("restore", help="ripristina un export in una cartella")
+    p_res = sub.add_parser("restore", help="ripristina un export: in una cartella nuova "
+                                           "(--to) o SUL brain attivo (--replace)")
     p_res.add_argument("archive", help="archivio wadachi-export-*.tar.gz")
-    p_res.add_argument("--to", required=True, help="cartella di destinazione (nuova)")
+    p_res.add_argument("--to", help="cartella di destinazione (nuova)")
+    p_res.add_argument("--replace", action="store_true",
+                       help="'riparti da qui': sostituisce il brain attivo (lo stato "
+                            "corrente viene PRIMA esportato in backups/)")
+    p_res.add_argument("--brain-dir", help="brain attivo da sostituire (con --replace)")
     p_res.add_argument("--force", action="store_true",
-                       help="sovrascrivi una destinazione non vuota")
+                       help="con --to: sovrascrivi una destinazione non vuota")
 
     args = parser.parse_args()
 
@@ -272,15 +277,27 @@ def main() -> int:
         print(f"\nMettilo al sicuro. Per ripristinare: wadachi restore <archivio> --to <dir>")
         return 0
     if args.command == "restore":
-        from wadachi.portability import restore_brain
+        from wadachi.portability import restore_brain, restore_in_place
         print(f"wadachi {__version__} — restore\n")
+        if bool(args.to) == bool(args.replace):
+            print("  ✗ scegli UNA modalità: --to <dir-nuova> oppure --replace")
+            return 1
         try:
-            res = restore_brain(args.archive, to=args.to, force=args.force)
+            if args.replace:
+                brain = args.brain_dir or os.environ.get("BRAIN_DIR") or _default_brain_dir()
+                res = restore_in_place(args.archive, brain_dir=brain)
+                print(f"  ✓ brain sostituito: {res['restored_to']}")
+                if res["safety_export"]:
+                    print(f"  ✓ lo stato precedente è al sicuro: {res['safety_export']}")
+                print("\nRiavvia il client MCP. Per tornare indietro: "
+                      "wadachi restore <safety-export> --replace")
+            else:
+                res = restore_brain(args.archive, to=args.to, force=args.force)
+                print(f"  ✓ ripristinato in {res['restored_to']}")
+                print(f"\nPer usarlo: BRAIN_DIR={res['restored_to']} — poi `wadachi doctor`.")
         except (FileNotFoundError, FileExistsError, ValueError) as e:
             print(f"  ✗ {e}")
             return 1
-        print(f"  ✓ ripristinato in {res['restored_to']}")
-        print(f"\nPer usarlo: BRAIN_DIR={res['restored_to']} — poi `wadachi doctor` per verificare.")
         return 0
     if args.command == "obsidian":
         from wadachi.obsidian import run_backfill

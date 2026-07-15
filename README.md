@@ -361,7 +361,7 @@ pipx upgrade wadachi        # or: uv tool upgrade wadachi
 ```
 
 `wadachi export` never touches the brain (no migrations run) — safe even on a
-pre-wadachi Engram brain. `wadachi restore <archive> --to <dir>` brings it back.
+pre-wadachi Engram brain. `wadachi restore <archive> --to <dir>` brings it back somewhere new; `--replace` swaps the active brain (safety-exporting the current state first).
 
 ---
 
