@@ -20,7 +20,7 @@
 "softwareVersion":"0.9.0","license":"https://opensource.org/license/mit"}
 </script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23101012'/%3E%3Cpath d='M5 11.5C5 10.4 5.9 9.6 7 9.7L21 10.6C23.5 10.8 25.5 11.2 27 11.8C25.5 12.3 23.5 12.5 21 12.5L7 13.2C5.9 13.3 5 12.6 5 11.5Z' fill='%23E8E4DC'/%3E%3Cpath d='M5 19.5C5 18.4 5.9 17.6 7 17.7L19.5 18.6C22 18.8 24 19.2 25.5 19.8C24 20.3 22 20.5 19.5 20.5L7 21.2C5.9 21.3 5 20.6 5 19.5Z' fill='%23E8E4DC'/%3E%3Crect x='23' y='23' width='5' height='5' rx='1.4' fill='%23D9442B'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 
@@ -86,8 +86,10 @@
             <span class="tt">wadachi · recall.log</span>
           </div>
           <div class="term-body">
-            <div class="term-line"><span class="prompt">›</span> <span id="term-q"></span><span class="caret"></span></div>
-            <div id="term-results"></div>
+            <div class="term-live">
+              <div class="term-line"><span class="prompt">›</span> <span id="term-q"></span><span class="caret"></span></div>
+              <div id="term-results"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -117,7 +119,9 @@
       <p>The model re-reads the same files, re-discovers the same patterns —
          and you type the same reminders, again:</p>
       <div class="ghost-term" aria-hidden="true">
-        <div class="gt-line"><span class="gt-prompt">›</span> <span id="ghost-type"></span><span class="gt-caret"></span></div>
+        <div class="gt-stack">
+          <div class="gt-line"><span class="gt-prompt">›</span> <span id="ghost-type"></span><span class="gt-caret"></span></div>
+        </div>
         <div class="gt-count">explained again · ×<span id="ghost-count">14</span> this month</div>
       </div>
     </div>
@@ -355,6 +359,6 @@ wadachi init
 </footer>
 
 <!-- sumi-style hero engine — pure vanilla JS, no external libs -->
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

@@ -458,6 +458,23 @@
         ["#A08BB8", "pattern_05 → supersede on schema bump"],
         ["#D9442B", "reflect → 2 memories flagged for review"]] },
     ];
+    // sizer invisibili: una replica per query, impilate nella stessa cella
+    // del contenuto vivo — il body tiene sempre l'altezza del caso peggiore
+    (function () {
+      var body = qEl.closest(".term-body");
+      if (!body) return;
+      QUERIES.forEach(function (e) {
+        var s = document.createElement("div");
+        s.className = "term-sizer";
+        var html = '<div class="term-line"><span class="prompt">›</span> <span>' + e.q + '</span></div>' +
+                   '<div style="margin-top:9px;display:flex;flex-direction:column;gap:6px">';
+        e.r.forEach(function (r) {
+          html += '<div class="tres show"><span class="dot"></span><span>' + r[1] + '</span></div>';
+        });
+        s.innerHTML = html + '</div>';
+        body.appendChild(s);
+      });
+    })();
     var qi = 0;
     function type(q, done) {
       qEl.textContent = ""; var i = 0;
@@ -502,6 +519,18 @@
       'the deploy script needs the --release flag...',
       'we already tried that -- it breaks the cache...',
     ];
+    // stesse repliche invisibili anche qui: il terminale fantasma non
+    // cambia più altezza quando il testo va a capo su schermi stretti
+    (function () {
+      var stack = el.closest(".gt-stack");
+      if (!stack) return;
+      REMINDERS.forEach(function (t) {
+        var s = document.createElement("div");
+        s.className = "gt-line gt-sizer";
+        s.innerHTML = '<span class="gt-prompt">›</span> <span>' + t + '</span><span class="gt-caret"></span>';
+        stack.appendChild(s);
+      });
+    })();
     if (reduce) { el.textContent = REMINDERS[0]; return; }
     var ri = 0, count = 14;
     function typeLoop(txt, i, done) {
