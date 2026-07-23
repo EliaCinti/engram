@@ -1,15 +1,6 @@
 <div align="center">
 
-```
-┌─────────────────────────────────────────────┐
-│                                             │
-│           轍  w a d a c h i  轍             │
-│                                             │
-│      Your sessions leave tracks.            │
-│      Future sessions follow them.           │
-│                                             │
-└─────────────────────────────────────────────┘
-```
+<img src="assets/brand/banner-github-1280x640.png" alt="Wadachi (轍) — your sessions leave tracks. Future sessions follow them." width="100%">
 
 **Your AI forgets everything between sessions. Wadachi fixes that.**\
 *Wadachi (轍): the tracks wheels leave in a road — formerly known as Engram.*
@@ -17,14 +8,13 @@
 **The MCP-native memory server for the LLM Wiki pattern.**\
 Persistent memory + semantic search for Claude Code, Claude Desktop, Cursor, and any MCP client.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![MCP](https://img.shields.io/badge/protocol-MCP-e64a19?style=flat-square)](https://modelcontextprotocol.io)
-[![CI](https://img.shields.io/github/actions/workflow/status/EliaCinti/wadachi/ci.yml?style=flat-square&label=CI&labelColor=18181B)](https://github.com/EliaCinti/wadachi/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/wadachi?style=flat-square&color=D9442B&labelColor=18181B)](https://pypi.org/project/wadachi/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Live demo](https://img.shields.io/badge/demo-wadachi.eliacinti.dev-D9442B?style=flat-square)](https://wadachi.eliacinti.dev)
+[![PyPI](https://img.shields.io/pypi/v/wadachi?style=flat&color=D9442B&labelColor=18181B)](https://pypi.org/project/wadachi/)
+[![CI](https://img.shields.io/github/actions/workflow/status/EliaCinti/wadachi/ci.yml?style=flat&label=CI&labelColor=18181B)](https://github.com/EliaCinti/wadachi/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-E8E4DC?style=flat&labelColor=18181B)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-E8E4DC?style=flat&labelColor=18181B&logo=python&logoColor=E8E4DC)](https://python.org)
+[![Live demo](https://img.shields.io/badge/demo-wadachi.eliacinti.dev-E8E4DC?style=flat&labelColor=18181B)](https://wadachi.eliacinti.dev)
 
-**[Live graph demo →](https://wadachi.eliacinti.dev)** &nbsp;·&nbsp; *(coming soon — explore a real brain as an interactive constellation)*
+**[Live demo →](https://wadachi.eliacinti.dev)** &nbsp;·&nbsp; docs + an interactive constellation over a fictional sample brain
 
 </div>
 
@@ -44,6 +34,17 @@ You end up repeating yourself:
 Wadachi gives your AI a **persistent brain** — a local knowledge base where it stores insights, decisions, and patterns, then retrieves them instantly at the start of every session.
 
 One tool call at session start. All relevant context loaded. Zero wasted tokens re-discovering.
+
+## How it works
+
+<div align="center">
+<img src="assets/diagrams/how-it-works.svg" alt="Diagram: MCP clients (Claude Code, Claude Desktop, Cursor) talk to the Wadachi MCP server over the MCP protocol; the server reads and writes a local brain directory — a SQLite database with embeddings plus a markdown LLM Wiki — which can be opened as an Obsidian vault." width="820">
+</div>
+
+1. **Connect** — `wadachi init` wires the server into Claude Code (and Antigravity) automatically; any MCP client works.
+2. **Register your projects** — filesystem paths mapped to project names, so memories land in the right scope.
+3. **Start with context** — every session opens with `get_context`: relevant memories, recent decisions, what needs review.
+4. **Store as you go** — bugs, configs, patterns, decisions get saved the moment they're figured out. The brain compounds.
 
 ---
 
@@ -68,58 +69,6 @@ One tool call at session start. All relevant context loaded. Zero wasted tokens 
 **Reflection & Insights** — The brain thinks *between* sessions. `reflect` combines memories to surface cross-project analogies and non-obvious connections that no single memory holds — reusing the entity graph it already built, so no extra LLM cost. Candidates are *proposed*, never auto-trusted: you `accept_insight` (promoted to a real linked memory) or `reject_insight`.
 
 **Procedural Memory** — Recency-ranked recall can *hide* the right rule and let you repeat a mistake twice. `review_procedures` clusters recurring incident memories by root theme and proposes a single always-on rule for review — human-in-the-loop, it never rewrites your operating instructions itself.
-
----
-
-## Architecture
-
-```mermaid
-graph TB
-    subgraph Client
-        CC[Claude Code]
-        CD[Claude Desktop]
-        CU[Cursor]
-    end
-
-    subgraph Server ["Wadachi MCP Server — FastMCP · 31 tools"]
-        S[server.py<br><i>tool surface</i>]
-        ST[store.py<br><i>SQLite + markdown, versioned</i>]
-        SE[search.py<br><i>semantic + keyword</i>]
-        GR[graph.py<br><i>constellation: PPR recall</i>]
-        EN[entities.py<br><i>Graphify entity graph</i>]
-        BE[beliefs.py<br><i>belief revision</i>]
-        RE[reflect.py<br><i>cross-memory insights</i>]
-        PR[procedural.py<br><i>recurring-incident rules</i>]
-        WE[web.py<br><i>graph visualizer</i>]
-    end
-
-    subgraph Storage ["~/.wadachi (BRAIN_DIR)"]
-        DB[(brain.db<br><i>metadata · embeddings · beliefs</i>)]
-        GL[global/<br><i>cross-project memories</i>]
-        PJ[projects/.../<br><i>scoped memories</i>]
-        CO[.constellation/<br><i>entity-graph cache</i>]
-    end
-
-    CC & CD & CU <-->|MCP protocol| S
-    S --> SE & ST & GR & BE & RE & PR
-    GR --> EN
-    RE --> EN
-    SE --> DB
-    ST --> DB & GL & PJ
-    EN --> CO
-    WE -.->|reads| ST
-
-    style S fill:#1a1a2e,stroke:#e94560,color:#fff
-    style ST fill:#1a1a2e,stroke:#0f3460,color:#fff
-    style SE fill:#1a1a2e,stroke:#0f3460,color:#fff
-    style GR fill:#1a1a2e,stroke:#8b5cf6,color:#fff
-    style EN fill:#1a1a2e,stroke:#8b5cf6,color:#fff
-    style BE fill:#1a1a2e,stroke:#0f3460,color:#fff
-    style RE fill:#1a1a2e,stroke:#0f3460,color:#fff
-    style PR fill:#1a1a2e,stroke:#0f3460,color:#fff
-    style WE fill:#1a1a2e,stroke:#533483,color:#fff
-    style DB fill:#16213e,stroke:#533483,color:#fff
-```
 
 ---
 
@@ -386,7 +335,7 @@ Semantic search runs entirely on your machine — no API calls, no cloud, no cos
 - [x] **Reflection & insights** — cross-memory analogies proposed for accept/reject
 - [x] **Procedural memory** — recurring-incident clustering into candidate rules
 - [x] **Non-destructive memory history** — every update preserves prior versions
-- [x] **Web graph visualizer** — interactive constellation view *(live demo coming to [wadachi.eliacinti.dev](https://wadachi.eliacinti.dev))*
+- [x] **Web graph visualizer** — interactive constellation view, live at [wadachi.eliacinti.dev](https://wadachi.eliacinti.dev)
 
 ## Roadmap
 

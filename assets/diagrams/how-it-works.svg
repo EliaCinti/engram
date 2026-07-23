@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-labelledby="title desc">
+  <title id="title">How Wadachi works</title>
+  <desc id="desc">MCP clients (Claude Code, Claude Desktop, Cursor) talk to the Wadachi MCP server over the MCP protocol; the server reads and writes a local brain directory holding a SQLite database with embeddings and a markdown LLM Wiki, which can be opened as an Obsidian vault.</desc>
+  <!--
+    wadachi 轍 — "How it works" diagram.
+    Palette from BRAND.md (Sumi): cards #18181B on transparent bg, ink #E8E4DC,
+    stone gray #6E6A62, borders #2A2A2E, vermilion accent #D9442B (used sparingly).
+    Cards carry their own dark fill, so the diagram reads on BOTH GitHub light
+    and dark themes; no pure black (#000) or pure white (#FFF) fills anywhere.
+  -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 Z" fill="#D9442B"/>
+    </marker>
+  </defs>
+
+  <!-- ══════════ MCP CLIENTS ══════════ -->
+  <g>
+    <rect x="40" y="80" width="280" height="240" rx="14" fill="#18181B" stroke="#2A2A2E" stroke-width="1.5"/>
+    <text x="64" y="122" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="13" letter-spacing="2" fill="#6E6A62">MCP CLIENTS</text>
+    <text x="64" y="162" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="600" fill="#E8E4DC">Claude Code</text>
+    <text x="64" y="194" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="600" fill="#E8E4DC">Claude Desktop</text>
+    <text x="64" y="226" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="600" fill="#E8E4DC">Cursor</text>
+    <text x="64" y="262" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">…or any MCP client</text>
+  </g>
+
+  <!-- arrow: clients → server -->
+  <line x1="332" y1="200" x2="428" y2="200" stroke="#D9442B" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="380" y="182" text-anchor="middle" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="12" fill="#6E6A62">MCP protocol</text>
+
+  <!-- ══════════ WADACHI MCP SERVER ══════════ -->
+  <g>
+    <rect x="440" y="40" width="300" height="320" rx="14" fill="#18181B" stroke="#2A2A2E" stroke-width="1.5"/>
+    <!-- mini logomark (scaled from assets/brand/logomark.svg): two sumi strokes + hanko seal -->
+    <g transform="translate(464,58) scale(0.085)">
+      <g fill="#E8E4DC">
+        <path d="M 74 184 C 64 166, 76 150, 96 150 C 170 146, 264 158, 344 174 C 394 183, 434 193, 462 205 C 434 211, 394 212, 344 208 C 264 202, 166 200, 96 212 C 80 214, 68 200, 74 184 Z"/>
+        <path d="M 470 203 C 484 201, 494 201, 502 199 C 494 207, 484 209, 470 210 Z"/>
+        <path d="M 74 300 C 64 282, 76 266, 96 266 C 170 262, 260 274, 336 290 C 382 299, 418 309, 444 319 C 418 325, 382 326, 336 322 C 260 316, 166 314, 96 328 C 80 330, 68 316, 74 300 Z"/>
+        <path d="M 452 317 C 466 315, 476 315, 486 313 C 476 321, 466 323, 452 324 Z"/>
+      </g>
+      <rect x="410" y="376" width="56" height="56" rx="10" fill="#D9442B"/>
+    </g>
+    <text x="518" y="88" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#E8E4DC">WADACHI</text>
+    <text x="518" y="110" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">MCP server</text>
+    <line x1="464" y1="134" x2="716" y2="134" stroke="#2A2A2E" stroke-width="1"/>
+    <text x="464" y="162" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="14" fill="#E8E4DC">get_context · recall</text>
+    <text x="464" y="186" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="14" fill="#E8E4DC">store_memory · why · as_of</text>
+    <text x="464" y="218" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">semantic search · memory graph</text>
+    <text x="464" y="240" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">belief revision · reflection</text>
+    <line x1="464" y1="266" x2="716" y2="266" stroke="#2A2A2E" stroke-width="1"/>
+    <text x="464" y="294" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="13" fill="#6E6A62">31 tools · FastMCP</text>
+    <!-- hanko seal, bottom right -->
+    <rect x="692" y="310" width="24" height="24" rx="5" fill="#D9442B"/>
+  </g>
+
+  <!-- arrow: server → brain -->
+  <line x1="752" y1="200" x2="868" y2="200" stroke="#D9442B" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="810" y="182" text-anchor="middle" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="12" fill="#6E6A62">reads / writes</text>
+
+  <!-- ══════════ BRAIN DIR ══════════ -->
+  <g>
+    <rect x="880" y="40" width="280" height="170" rx="14" fill="#18181B" stroke="#2A2A2E" stroke-width="1.5"/>
+    <text x="904" y="62" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="11" letter-spacing="2" fill="#6E6A62">BRAIN DIR</text>
+    <text x="904" y="86" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="15" font-weight="600" fill="#E8E4DC">~/.wadachi</text>
+    <text x="904" y="118" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="13" fill="#E8E4DC">brain.db</text>
+    <text x="976" y="118" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">SQLite · embeddings</text>
+    <text x="904" y="144" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="13" fill="#E8E4DC">*.md</text>
+    <text x="945" y="144" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6E6A62">LLM Wiki · [[wikilinks]]</text>
+    <text x="904" y="170" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="12" fill="#6E6A62">index.md · log.md · SCHEMA.md</text>
+  </g>
+
+  <!-- dashed connector: brain dir → obsidian -->
+  <line x1="1020" y1="210" x2="1020" y2="270" stroke="#6E6A62" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="1032" y="244" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" fill="#6E6A62">open as</text>
+
+  <!-- ══════════ OBSIDIAN VAULT ══════════ -->
+  <g>
+    <rect x="880" y="270" width="280" height="90" rx="14" fill="#18181B" stroke="#2A2A2E" stroke-width="1.5"/>
+    <text x="904" y="300" font-family="ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace" font-size="11" letter-spacing="2" fill="#6E6A62">OBSIDIAN VAULT</text>
+    <text x="904" y="326" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" fill="#E8E4DC">Open the brain dir as a vault</text>
+    <text x="904" y="346" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6E6A62">graph view over your memories</text>
+  </g>
+</svg>
